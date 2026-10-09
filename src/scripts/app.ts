@@ -1,4 +1,5 @@
 import { PortfolioWorld, CHECKPOINTS, type CheckpointConfig, type CheckpointKey } from './portfolioWorld';
+import { soundFx } from './soundEffects';
 
 function initPortfolioApp() {
   const container = document.getElementById('canvas-container');
@@ -25,9 +26,22 @@ function initPortfolioApp() {
   const welcomeCloseBtn = document.getElementById('welcome-close-btn');
   const welcomeStartBtn = document.getElementById('welcome-start-btn');
 
+  // Toolbar & Minimap elements
+  const btnNightMode = document.getElementById('btn-night-mode');
+  const btnSoundToggle = document.getElementById('btn-sound-toggle');
+  const btnHorn = document.getElementById('btn-horn');
+  const ctrlHorn = document.getElementById('ctrl-horn');
+  const ctrlLight = document.getElementById('ctrl-light');
+  const minimapCar = document.getElementById('minimap-car');
+  const minimapNodes = document.querySelectorAll('.minimap-cp-btn');
+  const toastBox = document.getElementById('toast-box');
+  const toastText = document.getElementById('toast-text');
+  const toastIcon = document.getElementById('toast-icon');
+
   let currentNearCp: CheckpointConfig | null = null;
   let isModalOpen = false;
   let isWelcomeOpen = true;
+  let toastTimeout: number | null = null;
 
   const ICONS: Record<string, string> = {
     projects: '💻',
@@ -37,6 +51,49 @@ function initPortfolioApp() {
     contact: '📬',
     help: '❓',
   };
+
+  // Toast notification helper
+  function showToast(message: string, icon = '✨') {
+    if (!toastBox || !toastText) return;
+    if (toastIcon) toastIcon.textContent = icon;
+    toastText.textContent = message;
+
+    toastBox.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+    toastBox.classList.add('opacity-100', 'translate-y-0');
+
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = window.setTimeout(() => {
+      toastBox.classList.remove('opacity-100', 'translate-y-0');
+      toastBox.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+    }, 2400);
+  }
+
+  // Audio initialize on first user interaction
+  const triggerAudioInit = () => {
+    soundFx.init();
+    window.removeEventListener('pointerdown', triggerAudioInit);
+    window.removeEventListener('keydown', triggerAudioInit);
+  };
+  window.addEventListener('pointerdown', triggerAudioInit);
+  window.addEventListener('keydown', triggerAudioInit);
+
+  // Sync sound toggle button state
+  function updateSoundBtn() {
+    if (!btnSoundToggle) return;
+    const muted = soundFx.isMuted();
+    btnSoundToggle.textContent = muted ? '🔇' : '🔊';
+    btnSoundToggle.title = muted ? 'Suara SFX Mati (Klik untuk aktifkan)' : 'Suara SFX Aktif (Klik untuk mute)';
+  }
+  updateSoundBtn();
+
+  if (btnSoundToggle) {
+    btnSoundToggle.addEventListener('click', () => {
+      soundFx.init();
+      const muted = soundFx.toggleMute();
+      updateSoundBtn();
+      showToast(muted ? 'Suara dinonaktifkan' : 'Suara diaktifkan! 🔊', muted ? '🔇' : '🔊');
+    });
+  }
 
   // Modal open
   function openModal(key: string, label?: string, desc?: string) {
@@ -55,6 +112,11 @@ function initPortfolioApp() {
     modalBackdrop.classList.add('opacity-100');
     modalCard.classList.remove('scale-95');
     modalCard.classList.add('scale-100');
+
+    // Update URL hash without causing jump
+    if (key !== 'help') {
+      history.replaceState(null, '', `#${key}`);
+    }
   }
 
   // Modal close
@@ -66,6 +128,9 @@ function initPortfolioApp() {
     modalBackdrop.classList.add('opacity-0', 'pointer-events-none');
     modalCard.classList.remove('scale-100');
     modalCard.classList.add('scale-95');
+
+    // Reset URL hash
+    history.replaceState(null, '', window.location.pathname);
 
     world.resetToOverview();
   }
@@ -121,11 +186,56 @@ function initPortfolioApp() {
     onSelectCheckpoint: (cp) => {
       openModal(cp.key, cp.label, cp.shortDesc);
     },
+    onCarUpdate: (x, z, angle) => {
+      // Real-time update Minimap radar pointer
+      if (minimapCar) {
+        // Coordinate mapping: Three.js (x, z) to SVG coordinates
+        const deg = (angle * 180) / Math.PI;
+        minimapCar.setAttribute('transform', `translate(${x.toFixed(2)}, ${z.toFixed(2)}) rotate(${(-deg).toFixed(1)})`);
+      }
+    },
+  });
+
+  // Horn button handlers
+  const handleHorn = () => {
+    soundFx.init();
+    world.honk();
+    showToast('BEEP BEEP! 📯', '📯');
+  };
+  if (btnHorn) btnHorn.addEventListener('click', handleHorn);
+  if (ctrlHorn) ctrlHorn.addEventListener('click', handleHorn);
+
+  // Night mode handlers
+  const handleNightToggle = () => {
+    soundFx.init();
+    const isNight = world.toggleNightMode();
+    if (btnNightMode) {
+      btnNightMode.textContent = isNight ? '☀️' : '🌙';
+      btnNightMode.title = isNight ? 'Beralih ke Mode Siang' : 'Beralih ke Mode Malam';
+    }
+    showToast(isNight ? 'Mode Malam Aktif 🌙' : 'Mode Siang Aktif ☀️', isNight ? '🌙' : '☀️');
+  };
+  if (btnNightMode) btnNightMode.addEventListener('click', handleNightToggle);
+  if (ctrlLight) ctrlLight.addEventListener('click', handleNightToggle);
+
+  // Minimap checkpoint click navigation
+  minimapNodes.forEach((node) => {
+    node.addEventListener('click', () => {
+      soundFx.init();
+      const target = node.getAttribute('data-key') as CheckpointKey;
+      if (target && CHECKPOINTS[target]) {
+        closeModal();
+        world.navigateToCheckpoint(target, (cp) => {
+          openModal(target, cp.label, cp.shortDesc);
+        });
+      }
+    });
   });
 
   // Proximity click
   if (proximityBtn) {
     proximityBtn.addEventListener('click', () => {
+      soundFx.init();
       if (currentNearCp) {
         closeModal();
         world.navigateToCheckpoint(currentNearCp.key, (cp) => {
@@ -138,6 +248,7 @@ function initPortfolioApp() {
   // Recruiter Dock clicks
   dockButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
+      soundFx.init();
       const target = btn.getAttribute('data-target') as CheckpointKey;
       if (target && CHECKPOINTS[target]) {
         closeModal();
@@ -152,12 +263,14 @@ function initPortfolioApp() {
   if (welcomeCloseBtn) {
     welcomeCloseBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      soundFx.init();
       closeWelcomeModal();
     });
   }
   if (welcomeStartBtn) {
     welcomeStartBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      soundFx.init();
       closeWelcomeModal();
     });
   }
@@ -165,6 +278,7 @@ function initPortfolioApp() {
     welcomeBackdrop.addEventListener('click', (e) => {
       if (e.target === welcomeBackdrop) {
         e.preventDefault();
+        soundFx.init();
         closeWelcomeModal();
       }
     });
@@ -172,7 +286,10 @@ function initPortfolioApp() {
 
   // Controls help
   if (btnHelp) {
-    btnHelp.addEventListener('click', openWelcomeModal);
+    btnHelp.addEventListener('click', () => {
+      soundFx.init();
+      openModal('help', 'Panduan Kontrol & Fitur', 'Instruksi mengemudi dan shortcut');
+    });
   }
 
   // Info modal triggers
@@ -182,6 +299,23 @@ function initPortfolioApp() {
       if (e.target === modalBackdrop) closeModal();
     });
   }
+
+  // Clipboard copy handlers
+  document.querySelectorAll('.clipboard-copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      soundFx.init();
+      soundFx.playClick();
+      const textToCopy = btn.getAttribute('data-clipboard');
+      if (textToCopy) {
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          showToast(`Tersalin: ${textToCopy}`, '📋');
+        } catch {
+          showToast('Gagal menyalin teks', '⚠️');
+        }
+      }
+    });
+  });
 
   // Escape key global
   window.addEventListener('keydown', (e) => {
@@ -314,6 +448,17 @@ function initPortfolioApp() {
         openModal(cp.key, cp.label, cp.shortDesc);
       });
     });
+  }
+
+  // Deep-linking URL hash router on startup
+  const initialHash = window.location.hash.replace('#', '') as CheckpointKey;
+  if (initialHash && CHECKPOINTS[initialHash]) {
+    closeWelcomeModal();
+    setTimeout(() => {
+      world.navigateToCheckpoint(initialHash, (cp) => {
+        openModal(initialHash, cp.label, cp.shortDesc);
+      });
+    }, 400);
   }
 }
 

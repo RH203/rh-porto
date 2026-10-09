@@ -89,8 +89,30 @@
     </div>
   </div>
 
-  {/* Action / Inspect Button (Right side) */}
-  <div class="pointer-events-auto flex items-end">
+  {/* Right Controls: Action, Horn & Lights */}
+  <div class="pointer-events-auto flex flex-col items-end gap-2.5">
+    <div class="flex items-center gap-2">
+      <button
+        id="ctrl-horn"
+        type="button"
+        class="w-12 h-12 rounded-2xl bg-[#343746]/90 border border-[#44475a] active:bg-[#f1fa8c] text-[#f8f8f2] active:text-[#282a36] shadow-xl flex items-center justify-center text-lg active:scale-95 transition-transform"
+        title="Klakson"
+        aria-label="Bunyikan Klakson"
+      >
+        📯
+      </button>
+      <button
+        id="ctrl-light"
+        type="button"
+        class="w-12 h-12 rounded-2xl bg-[#343746]/90 border border-[#44475a] active:bg-[#ffb86c] text-[#f8f8f2] active:text-[#282a36] shadow-xl flex items-center justify-center text-lg active:scale-95 transition-transform"
+        title="Lampu Malam / Siang"
+        aria-label="Toggle Mode Malam"
+      >
+        💡
+      </button>
+    </div>
+
+    {/* Primary Action Button */}
     <button
       id="ctrl-action"
       type="button"

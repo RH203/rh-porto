@@ -190,28 +190,61 @@ import { portfolioData } from '../data/portfolioData';
           <span>GitHub</span>
         </a>
       </div>
+
+      <!-- Quick Copy & Download Actions -->
+      <div class="bg-[#282a36] border border-[#44475a] p-4 rounded-2xl space-y-2">
+        <h4 class="text-[11px] font-bold uppercase tracking-wider text-[#bd93f9]">Aksi Cepat Recruiter</h4>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            id="btn-copy-email"
+            data-clipboard={portfolioData.contact.email}
+            class="clipboard-copy-btn flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#343746] hover:bg-[#bd93f9] hover:text-[#282a36] text-[#f8f8f2] text-xs font-semibold border border-[#44475a] transition-colors"
+          >
+            <span>📋</span>
+            <span>Salin Email ({portfolioData.contact.email})</span>
+          </button>
+          <button
+            type="button"
+            id="btn-copy-phone"
+            data-clipboard={portfolioData.contact.phone}
+            class="clipboard-copy-btn flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#343746] hover:bg-[#50fa7b] hover:text-[#282a36] text-[#f8f8f2] text-xs font-semibold border border-[#44475a] transition-colors"
+          >
+            <span>📱</span>
+            <span>Salin WhatsApp / HP ({portfolioData.contact.phone})</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Section: Controls Help -->
     <div id="section-help" class="modal-section hidden space-y-4">
       <div class="bg-[#282a36] border border-[#44475a] p-4 rounded-2xl">
-        <h3 class="text-sm font-bold text-[#50fa7b] mb-2">Cara Mengendalikan Mobil</h3>
-        <ul class="text-xs space-y-2 text-[#f8f8f2]">
+        <h3 class="text-sm font-bold text-[#50fa7b] mb-3">Cara Menyetir & Fitur Interaktif</h3>
+        <ul class="text-xs space-y-2.5 text-[#f8f8f2]">
           <li class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#8be9fd]">W / A / S / D</span>
             <span>atau tombol panah keyboard untuk mengemudi mobil.</span>
           </li>
           <li class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#8be9fd]">Space / Enter</span>
-            <span>Buka informasi zona saat berada di dekat platform.</span>
+            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#f1fa8c]">H</span>
+            <span>Membunyikan klakson mobil (Honk!) dengan efek gelombang suara.</span>
           </li>
           <li class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#8be9fd]">Esc</span>
+            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#ffb86c]">L</span>
+            <span>Menyalakan/mematikan Mode Malam (Day & Night visual atmosphere).</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#bd93f9]">Space / Enter</span>
+            <span>Buka informasi zona saat berada di dekat stasiun platform.</span>
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#ff79c6]">Esc</span>
             <span>Tutup dialog modal dan kembali mengemudi.</span>
           </li>
           <li class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#50fa7b]">Dock Bawah</span>
-            <span>Mode cepat untuk recruiter (klik langsung lompat ke zona tanpa mengemudi).</span>
+            <span class="px-2 py-0.5 rounded bg-[#44475a] font-mono text-[#50fa7b]">Radar / Dock</span>
+            <span>Klik titik pada radar minimap atau menu dock bawah untuk teleport instan.</span>
           </li>
         </ul>
       </div>

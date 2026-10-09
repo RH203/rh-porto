@@ -1,0 +1,83 @@
+---
+import { CHECKPOINTS } from '../scripts/portfolioWorld';
+---
+
+<div
+  id="minimap-container"
+  class="fixed top-20 left-4 z-20 select-none hidden sm:block transition-transform duration-300 pointer-events-auto"
+  title="Radar Minimap Pulau (Klik titik untuk langsung menuju lokasi)"
+>
+  <div class="relative bg-[#282a36]/90 border border-[#44475a] p-2 rounded-2xl shadow-2xl backdrop-blur-md flex flex-col items-center">
+    <div class="flex items-center justify-between w-full px-1 mb-1.5">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-[#50fa7b] animate-ping"></span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[#bd93f9]">Radar GPS</span>
+      </div>
+      <span class="text-[9px] font-mono text-[#6272a4]">1:100</span>
+    </div>
+
+    {/* Radar Screen Area (SVG 120x120) */}
+    <div class="relative w-28 h-28 rounded-full bg-[#21222c] border border-[#44475a] overflow-hidden flex items-center justify-center">
+      {/* Radar sweep line */}
+      <div class="absolute inset-0 rounded-full border border-[#44475a]/40 pointer-events-none"></div>
+      <div class="absolute w-full h-[1px] bg-[#44475a]/30 pointer-events-none"></div>
+      <div class="absolute h-full w-[1px] bg-[#44475a]/30 pointer-events-none"></div>
+
+      {/* Road track guide */}
+      <div class="absolute w-20 h-20 rounded-full border border-dashed border-[#6272a4]/40 pointer-events-none"></div>
+
+      {/* SVG Map elements */}
+      <svg
+        id="minimap-svg"
+        viewBox="-16 -16 32 32"
+        class="w-full h-full transform -rotate-90 pointer-events-auto cursor-crosshair"
+      >
+        {/* Island platform outline */}
+        <circle cx="0" cy="0" r="14.5" fill="none" stroke="#44475a" stroke-width="0.8" />
+        
+        {/* Road Track ring */}
+        <circle cx="0" cy="0" r="7.5" fill="none" stroke="#6272a4" stroke-width="2.2" stroke-opacity="0.3" />
+
+        {/* Center fountain */}
+        <circle cx="0" cy="0" r="2.5" fill="#343746" stroke="#bd93f9" stroke-width="0.5" />
+
+        {/* Checkpoint clickable nodes */}
+        {Object.values(CHECKPOINTS).map((cp) => (
+          <g class="minimap-cp-btn cursor-pointer group" data-key={cp.key}>
+            <circle
+              cx={cp.position[0]}
+              cy={cp.position[2]}
+              r="2.0"
+              fill={cp.color}
+              fill-opacity="0.25"
+              class="animate-pulse"
+            />
+            <circle
+              cx={cp.position[0]}
+              cy={cp.position[2]}
+              r="1.2"
+              fill={cp.color}
+              stroke="#f8f8f2"
+              stroke-width="0.4"
+              class="transition-transform group-hover:scale-125"
+            />
+          </g>
+        ))}
+
+        {/* Dynamic Car Marker */}
+        <g id="minimap-car" transform="translate(0, 0) rotate(0)">
+          {/* Car body dot */}
+          <circle cx="0" cy="0" r="1.3" fill="#ff79c6" stroke="#f8f8f2" stroke-width="0.5" />
+          {/* Direction indicator arrow */}
+          <polygon points="0,-2.6 1.1,-0.5 -1.1,-0.5" fill="#f1fa8c" />
+        </g>
+      </svg>
+    </div>
+
+    {/* Legend hints */}
+    <div class="flex items-center justify-between w-full mt-1.5 px-0.5 text-[9px] text-[#8be9fd]">
+      <span>📍 5 Lokasi</span>
+      <span class="text-[#f1fa8c] font-medium">Klik = Teleport</span>
+    </div>
+  </div>
+</div>
