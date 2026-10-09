@@ -1,0 +1,51 @@
+---
+import Layout from '../layouts/Layout.astro';
+import RecruiterDock from '../components/RecruiterDock.astro';
+import MobileControls from '../components/MobileControls.astro';
+import ProximityBadge from '../components/ProximityBadge.astro';
+import InfoModal from '../components/InfoModal.astro';
+import WelcomeModal from '../components/WelcomeModal.astro';
+import { portfolioData } from '../data/portfolioData';
+
+const pageTitle = `${portfolioData.contact.name} - 3D Interactive Portfolio`;
+const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact.role}. Interactive 3D Toy Car Diorama Portfolio.`;
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <!-- 3D Canvas Viewport -->
+  <main id="canvas-container" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></main>
+
+  <!-- Top Left HUD: Profile Identity -->
+  <header class="fixed top-4 left-4 z-20 pointer-events-none select-none">
+    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3.5 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-[#bd93f9] text-[#282a36] font-black flex items-center justify-center text-sm shadow">
+        RF
+      </div>
+      <div>
+        <h1 class="text-xs sm:text-sm font-bold tracking-tight text-[#f8f8f2] leading-tight">
+          {portfolioData.contact.name}
+        </h1>
+        <p class="text-[10px] sm:text-[11px] font-medium text-[#50fa7b] leading-tight">
+          {portfolioData.contact.role}
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Top Right HUD: Driving Hints -->
+  <aside class="fixed top-4 right-4 z-20 pointer-events-none select-none hidden md:block">
+    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3 py-2 rounded-2xl shadow-xl backdrop-blur-xs text-[11px] text-[#6272a4]">
+      <span class="text-[#8be9fd] font-mono font-bold">WASD / Panah</span> untuk menyetir mobil
+    </div>
+  </aside>
+
+  <!-- Interactive Overlays -->
+  <ProximityBadge />
+  <RecruiterDock />
+  <MobileControls />
+  <InfoModal />
+  <WelcomeModal />
+
+  <!-- Bundled Client Application Script -->
+  <script src="../scripts/app.ts"></script>
+</Layout>

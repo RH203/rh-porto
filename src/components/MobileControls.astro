@@ -1,0 +1,104 @@
+---
+---
+
+<div
+  id="mobile-controls"
+  class="fixed inset-x-0 bottom-20 sm:bottom-24 z-20 pointer-events-none flex justify-between items-end px-3 sm:px-8 select-none"
+>
+  {/* Left Controls Box */}
+  <div class="pointer-events-auto flex flex-col items-start gap-2">
+    {/* Mode Switcher Tabs */}
+    <div class="flex items-center bg-[#282a36]/90 p-1 rounded-xl border border-[#44475a] shadow backdrop-blur-xs gap-1">
+      <button
+        id="mode-joystick-btn"
+        type="button"
+        class="ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#bd93f9] text-[#282a36] shadow transition-colors"
+      >
+        🕹️ Joystick
+      </button>
+      <button
+        id="mode-dpad-btn"
+        type="button"
+        class="ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#6272a4] hover:text-[#f8f8f2] transition-colors"
+      >
+        🎛️ D-Pad
+      </button>
+    </div>
+
+    {/* Option 1: Virtual Analog Joystick Panel */}
+    <div
+      id="panel-joystick"
+      class="w-36 h-36 rounded-full bg-[#343746]/90 border-2 border-[#44475a] relative flex items-center justify-center shadow-2xl backdrop-blur-xs touch-none cursor-pointer"
+    >
+      <!-- Center resting crosshair -->
+      <div class="w-8 h-8 rounded-full border border-dashed border-[#6272a4]/50 pointer-events-none"></div>
+
+      <!-- Movable Knob -->
+      <div
+        id="joystick-knob"
+        class="w-14 h-14 rounded-full bg-gradient-to-br from-[#bd93f9] to-[#6272a4] border-2 border-[#f8f8f2] shadow-xl absolute transition-transform duration-75 flex items-center justify-center text-xs pointer-events-none"
+      >
+        🚗
+      </div>
+    </div>
+
+    {/* Option 2: Retro D-Pad Panel */}
+    <div
+      id="panel-dpad"
+      class="hidden grid-cols-3 gap-1.5 w-36 h-36 bg-[#343746]/90 p-2 rounded-3xl border-2 border-[#44475a] backdrop-blur-xs shadow-xl"
+    >
+      <div></div>
+      <button
+        id="ctrl-forward"
+        type="button"
+        class="ctrl-touch-btn flex items-center justify-center rounded-2xl bg-[#282a36] active:bg-[#bd93f9] text-[#f8f8f2] active:text-[#282a36] font-bold text-lg border border-[#44475a] shadow select-none"
+        aria-label="Gas / Forward"
+      >
+        ▲
+      </button>
+      <div></div>
+
+      <button
+        id="ctrl-left"
+        type="button"
+        class="ctrl-touch-btn flex items-center justify-center rounded-2xl bg-[#282a36] active:bg-[#bd93f9] text-[#f8f8f2] active:text-[#282a36] font-bold text-lg border border-[#44475a] shadow select-none"
+        aria-label="Steer Left"
+      >
+        ◀
+      </button>
+      <div class="flex items-center justify-center text-[10px] text-[#6272a4] font-mono">DRIVE</div>
+      <button
+        id="ctrl-right"
+        type="button"
+        class="ctrl-touch-btn flex items-center justify-center rounded-2xl bg-[#282a36] active:bg-[#bd93f9] text-[#f8f8f2] active:text-[#282a36] font-bold text-lg border border-[#44475a] shadow select-none"
+        aria-label="Steer Right"
+      >
+        ▶
+      </button>
+
+      <div></div>
+      <button
+        id="ctrl-backward"
+        type="button"
+        class="ctrl-touch-btn flex items-center justify-center rounded-2xl bg-[#282a36] active:bg-[#bd93f9] text-[#f8f8f2] active:text-[#282a36] font-bold text-lg border border-[#44475a] shadow select-none"
+        aria-label="Reverse"
+      >
+        ▼
+      </button>
+      <div></div>
+    </div>
+  </div>
+
+  {/* Action / Inspect Button (Right side) */}
+  <div class="pointer-events-auto flex items-end">
+    <button
+      id="ctrl-action"
+      type="button"
+      class="ctrl-touch-btn w-20 h-20 rounded-full bg-[#50fa7b] text-[#282a36] font-black text-sm tracking-wide shadow-2xl border-4 border-[#343746] active:scale-95 transition-transform flex flex-col items-center justify-center select-none"
+      aria-label="Buka informasi"
+    >
+      <span class="text-xl leading-none">🔍</span>
+      <span class="text-[10px] uppercase font-bold mt-1">OPEN</span>
+    </button>
+  </div>
+</div>

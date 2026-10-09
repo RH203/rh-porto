@@ -1,0 +1,73 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props;
+---
+
+<nav
+  id="recruiter-dock"
+  aria-label="Fast-track navigation"
+  class={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 bg-[#343746]/95 border-2 border-[#44475a] px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl sm:rounded-3xl shadow-2xl flex items-center gap-1.5 sm:gap-2.5 backdrop-blur-xs max-w-[95vw] overflow-x-auto ${className}`}
+>
+  <div class="hidden md:flex items-center gap-1.5 pr-2 mr-1 border-r border-[#44475a]">
+    <span class="w-2.5 h-2.5 rounded-full bg-[#50fa7b] inline-block animate-pulse"></span>
+    <span class="text-[11px] font-bold tracking-wider uppercase text-[#bd93f9]">Recruiter Mode</span>
+  </div>
+
+  <button
+    type="button"
+    data-target="projects"
+    class="dock-btn group flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#282a36] hover:bg-[#bd93f9] hover:text-[#282a36] border border-[#44475a] transition-all duration-150 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#bd93f9]"
+  >
+    <span class="text-sm">💻</span>
+    <span class="hidden sm:inline">Projects</span>
+  </button>
+
+  <button
+    type="button"
+    data-target="experience"
+    class="dock-btn group flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] border border-[#44475a] transition-all duration-150 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#ff79c6]"
+  >
+    <span class="text-sm">💼</span>
+    <span class="hidden sm:inline">Experience</span>
+  </button>
+
+  <button
+    type="button"
+    data-target="skills"
+    class="dock-btn group flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#282a36] hover:bg-[#50fa7b] hover:text-[#282a36] border border-[#44475a] transition-all duration-150 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#50fa7b]"
+  >
+    <span class="text-sm">⚡</span>
+    <span class="hidden sm:inline">Skills</span>
+  </button>
+
+  <button
+    type="button"
+    data-target="education"
+    class="dock-btn group flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#282a36] hover:bg-[#8be9fd] hover:text-[#282a36] border border-[#44475a] transition-all duration-150 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#8be9fd]"
+  >
+    <span class="text-sm">🎓</span>
+    <span class="hidden sm:inline">Education</span>
+  </button>
+
+  <button
+    type="button"
+    data-target="contact"
+    class="dock-btn group flex items-center gap-1.5 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#282a36] hover:bg-[#f1fa8c] hover:text-[#282a36] border border-[#44475a] transition-all duration-150 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#f1fa8c]"
+  >
+    <span class="text-sm">📬</span>
+    <span class="hidden sm:inline">Contact</span>
+  </button>
+
+  <button
+    type="button"
+    id="btn-controls-help"
+    title="How to play / drive"
+    class="flex items-center justify-center px-2 py-2 sm:px-2.5 sm:py-2 rounded-xl text-xs font-bold text-[#6272a4] hover:text-[#f8f8f2] hover:bg-[#44475a] transition-colors min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-[#bd93f9]"
+    aria-label="Driving instructions"
+  >
+    <span>❓</span>
+  </button>
+</nav>

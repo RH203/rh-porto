@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dracula-bg: #282a36;
+  --color-dracula-surface: #343746;
+  --color-dracula-elevated: #44475a;
+  --color-dracula-purple: #bd93f9;
+  --color-dracula-green: #50fa7b;
+  --color-dracula-pink: #ff79c6;
+  --color-dracula-cyan: #8be9fd;
+  --color-dracula-yellow: #f1fa8c;
+  --color-dracula-orange: #ffb86c;
+  --color-dracula-text: #f8f8f2;
+  --color-dracula-muted: #6272a4;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #282a36;
+  color: #f8f8f2;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom scrollbars for modals */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #282a36;
+}
+::-webkit-scrollbar-thumb {
+  background: #44475a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6272a4;
+}

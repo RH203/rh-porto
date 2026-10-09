@@ -1,0 +1,89 @@
+---
+import { portfolioData } from '../data/portfolioData';
+---
+
+<div
+  id="welcome-modal-backdrop"
+  class="fixed inset-0 z-50 bg-[#282a36]/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 transition-opacity duration-300 opacity-100"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="welcome-title"
+>
+  <div
+    id="welcome-modal-card"
+    class="relative w-full max-w-lg bg-[#343746] border-2 border-[#bd93f9] rounded-3xl p-5 sm:p-7 text-[#f8f8f2] shadow-2xl transition-transform duration-300 scale-100"
+  >
+    {/* Close button */}
+    <button
+      id="welcome-close-btn"
+      type="button"
+      class="absolute top-4 right-4 w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#ff5555] text-[#f8f8f2] flex items-center justify-center font-bold text-sm border border-[#44475a] transition-colors focus:outline-none focus:ring-2 focus:ring-[#ff79c6]"
+      aria-label="Tutup panduan selamat datang"
+    >
+      ✕
+    </button>
+
+    {/* Header */}
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#bd93f9] text-[#282a36] font-black text-xl flex items-center justify-center shadow">
+        🚗
+      </div>
+      <div>
+        <h2 id="welcome-title" class="text-lg sm:text-xl font-bold tracking-tight text-[#50fa7b]">
+          Selamat Datang!
+        </h2>
+        <p class="text-xs text-[#8be9fd] font-medium">
+          Portofolio 3D Diorama: {portfolioData.contact.name}
+        </p>
+      </div>
+    </div>
+
+    {/* Intro text */}
+    <p class="text-xs text-[#f8f8f2]/90 leading-relaxed mb-4">
+      Ini adalah portofolio interaktif berbasis 3D. Anda dapat menjelajahi pulau diorama menggunakan mobil mainan untuk menemukan informasi CV saya.
+    </p>
+
+    {/* Instructions list */}
+    <div class="space-y-2.5 bg-[#282a36] border border-[#44475a] p-3.5 sm:p-4 rounded-2xl mb-5 text-xs">
+      <div class="flex items-start gap-2.5">
+        <span class="text-base leading-none">🎮</span>
+        <div>
+          <strong class="text-[#bd93f9]">Cara Menyetir:</strong>
+          <span class="text-[#f8f8f2]/80 ml-1">
+            Gunakan tombol <kbd class="px-1.5 py-0.5 rounded bg-[#44475a] text-[#8be9fd] font-mono text-[10px]">WASD</kbd> / panah di keyboard, atau virtual joystick di layar sentuh.
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-2.5">
+        <span class="text-base leading-none">📍</span>
+        <div>
+          <strong class="text-[#50fa7b]">5 Zona Interaktif:</strong>
+          <span class="text-[#f8f8f2]/80 ml-1">
+            Kunjungi stasiun platform bertanda Proyek 💻, Pengalaman Kerja 💼, Keahlian ⚡, Pendidikan 🎓, dan Kontak 📬.
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-2.5">
+        <span class="text-base leading-none">⚡</span>
+        <div>
+          <strong class="text-[#ff79c6]">Mode Cepat (Recruiter):</strong>
+          <span class="text-[#f8f8f2]/80 ml-1">
+            Sedang buru-buru? Cukup klik menu dock di bawah layar untuk langsung membuka informasi tanpa menyetir.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* CTA Button */}
+    <button
+      id="welcome-start-btn"
+      type="button"
+      class="w-full py-3 px-4 rounded-2xl bg-[#50fa7b] hover:bg-[#50fa7b]/90 text-[#282a36] font-bold text-sm tracking-wide shadow-lg active:scale-98 transition-transform flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#bd93f9]"
+    >
+      <span>Mulai Menjelajah</span>
+      <span>🚗💨</span>
+    </button>
+  </div>
+</div>
