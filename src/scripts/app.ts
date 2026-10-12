@@ -168,9 +168,10 @@ function initPortfolioApp() {
     welcomeCard.classList.add('scale-100');
   }
 
-  const starCounterText = document.getElementById('star-counter-text');
-  const ctrlNitro = document.getElementById('ctrl-nitro');
-  const ctrlJump = document.getElementById('ctrl-jump');
+  const telemetrySpeed = document.getElementById('telemetry-speed');
+  const telemetryGear = document.getElementById('telemetry-gear');
+  const telemetryDrift = document.getElementById('telemetry-drift');
+  const telemetryNitro = document.getElementById('telemetry-nitro');
 
   // 3D World Instantiation
   const world = new PortfolioWorld(container, {
@@ -190,10 +191,41 @@ function initPortfolioApp() {
     onSelectCheckpoint: (cp) => {
       openModal(cp.key, cp.label, cp.shortDesc);
     },
-    onCarUpdate: (x, z, angle) => {
+    onCarUpdate: (x, z, angle, speed, maxSpeed, isDrifting, isNitro) => {
       if (minimapCar) {
         const deg = (angle * 180) / Math.PI;
-        minimapCar.setAttribute('transform', `translate(${x.toFixed(2)}, ${z.toFixed(2)}) rotate(${(-deg).toFixed(1)})`);
+        const rot = 180 - deg;
+        minimapCar.setAttribute('transform', `translate(${x.toFixed(2)}, ${z.toFixed(2)}) rotate(${rot.toFixed(1)})`);
+      }
+
+      // Speedometer & Telemetry Instrument Cluster
+      if (telemetrySpeed) {
+        const kmh = Math.round(Math.abs(speed / (maxSpeed || 0.16)) * 120);
+        telemetrySpeed.textContent = String(kmh);
+      }
+      if (telemetryGear) {
+        if (speed < -0.01) {
+          telemetryGear.textContent = 'R';
+          telemetryGear.className = 'text-sm font-black text-[#ff5555] font-mono leading-none';
+        } else if (Math.abs(speed) < 0.005) {
+          telemetryGear.textContent = 'P';
+          telemetryGear.className = 'text-sm font-black text-[#6272a4] font-mono leading-none';
+        } else if (Math.abs(speed) < 0.05) {
+          telemetryGear.textContent = '1';
+          telemetryGear.className = 'text-sm font-black text-[#50fa7b] font-mono leading-none';
+        } else if (Math.abs(speed) < 0.11) {
+          telemetryGear.textContent = '2';
+          telemetryGear.className = 'text-sm font-black text-[#50fa7b] font-mono leading-none';
+        } else {
+          telemetryGear.textContent = '3';
+          telemetryGear.className = 'text-sm font-black text-[#bd93f9] font-mono leading-none';
+        }
+      }
+      if (telemetryDrift) {
+        telemetryDrift.style.opacity = isDrifting ? '1' : '0';
+      }
+      if (telemetryNitro) {
+        telemetryNitro.style.opacity = isNitro ? '1' : '0';
       }
     },
     onStarCollected: (collected, total) => {
@@ -362,45 +394,115 @@ function initPortfolioApp() {
     }
   });
 
-  // Mobile Controller: Joystick vs D-Pad
+  // Car Paint Palette Customizer
+  const btnPaintToggle = document.getElementById('btn-paint-toggle');
+  const paintPaletteMenu = document.getElementById('paint-palette-menu');
+  const paintSwatches = document.querySelectorAll('.paint-swatch');
+
+  if (btnPaintToggle && paintPaletteMenu) {
+    btnPaintToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundFx.init();
+      soundFx.playClick();
+      paintPaletteMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!paintPaletteMenu.contains(e.target as Node) && e.target !== btnPaintToggle) {
+        paintPaletteMenu.classList.add('hidden');
+      }
+    });
+
+    paintSwatches.forEach((swatch) => {
+      swatch.addEventListener('click', () => {
+        const color = swatch.getAttribute('data-color');
+        if (color) {
+          world.setCarPaint(color);
+          showToast('Warna mobil diubah! 🎨', '🎨');
+          paintPaletteMenu.classList.add('hidden');
+        }
+      });
+    });
+  }
+
+  // Mobile Controller: Joystick vs Steering Wheel vs D-Pad
   const modeJoystickBtn = document.getElementById('mode-joystick-btn');
+  const modeWheelBtn = document.getElementById('mode-wheel-btn');
   const modeDpadBtn = document.getElementById('mode-dpad-btn');
   const panelJoystick = document.getElementById('panel-joystick');
+  const panelWheel = document.getElementById('panel-wheel');
   const panelDpad = document.getElementById('panel-dpad');
+  const pedalStation = document.getElementById('pedal-station');
   const joystickKnob = document.getElementById('joystick-knob');
+  const steeringWheel = document.getElementById('steering-wheel');
+  const wheelAngleHint = document.getElementById('wheel-angle-hint');
+  const ctrlGasPedal = document.getElementById('ctrl-gas-pedal');
+  const ctrlBrakePedal = document.getElementById('ctrl-brake-pedal');
 
-  function setControlMode(mode: 'joystick' | 'dpad') {
-    if (!panelJoystick || !panelDpad || !modeJoystickBtn || !modeDpadBtn) return;
-    if (mode === 'joystick') {
-      panelJoystick.classList.remove('hidden');
-      panelDpad.classList.add('hidden');
-      panelDpad.classList.remove('grid');
+  let activeThrottle = 0;
+  let activeSteer = 0;
+  let gasActive = false;
+  let brakeActive = false;
 
-      modeJoystickBtn.className =
-        'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#bd93f9] text-[#282a36] shadow transition-colors';
-      modeDpadBtn.className =
-        'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#6272a4] hover:text-[#f8f8f2] transition-colors';
-    } else {
-      panelJoystick.classList.add('hidden');
-      panelDpad.classList.remove('hidden');
-      panelDpad.classList.add('grid');
+  const updatePedalThrottle = () => {
+    let t = 0;
+    if (gasActive) t += 1.0;
+    if (brakeActive) t -= 0.75;
+    activeThrottle = t;
+    world.setAnalogInput(activeThrottle, activeSteer);
+  };
 
-      modeDpadBtn.className =
-        'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#bd93f9] text-[#282a36] shadow transition-colors';
-      modeJoystickBtn.className =
-        'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#6272a4] hover:text-[#f8f8f2] transition-colors';
+  function setControlMode(mode: 'joystick' | 'wheel' | 'dpad') {
+    if (!panelJoystick || !panelWheel || !panelDpad) return;
+
+    const tabs = [
+      { id: 'joystick', btn: modeJoystickBtn, panel: panelJoystick },
+      { id: 'wheel', btn: modeWheelBtn, panel: panelWheel },
+      { id: 'dpad', btn: modeDpadBtn, panel: panelDpad },
+    ];
+
+    tabs.forEach((tab) => {
+      if (tab.id === mode) {
+        tab.panel?.classList.remove('hidden');
+        if (tab.id === 'dpad') tab.panel?.classList.add('grid');
+        if (tab.btn) {
+          tab.btn.className =
+            'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#bd93f9] text-[#282a36] shadow transition-colors';
+        }
+      } else {
+        tab.panel?.classList.add('hidden');
+        if (tab.id === 'dpad') tab.panel?.classList.remove('grid');
+        if (tab.btn) {
+          tab.btn.className =
+            'ctrl-mode-tab px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#6272a4] hover:text-[#f8f8f2] transition-colors';
+        }
+      }
+    });
+
+    if (pedalStation) {
+      if (mode === 'wheel') {
+        pedalStation.classList.remove('hidden');
+        pedalStation.classList.add('flex');
+      } else {
+        pedalStation.classList.add('hidden');
+        pedalStation.classList.remove('flex');
+        gasActive = false;
+        brakeActive = false;
+      }
     }
+
+    world.setAnalogInput(0, 0);
   }
 
-  if (modeJoystickBtn && modeDpadBtn) {
-    modeJoystickBtn.addEventListener('click', () => setControlMode('joystick'));
-    modeDpadBtn.addEventListener('click', () => setControlMode('dpad'));
-  }
+  if (modeJoystickBtn) modeJoystickBtn.addEventListener('click', () => setControlMode('joystick'));
+  if (modeWheelBtn) modeWheelBtn.addEventListener('click', () => setControlMode('wheel'));
+  if (modeDpadBtn) modeDpadBtn.addEventListener('click', () => setControlMode('dpad'));
 
-  // Virtual Analog Joystick
+  // Option 1: Improved Virtual Analog Joystick (with deadzone & smooth curve)
   if (panelJoystick && joystickKnob) {
     let isDragging = false;
     const maxRadius = 45;
+    const deadzone = 0.06;
 
     const updateJoystick = (clientX: number, clientY: number) => {
       const rect = panelJoystick.getBoundingClientRect();
@@ -419,8 +521,17 @@ function initPortfolioApp() {
 
       joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
 
-      const throttle = -dy / maxRadius;
-      const steer = dx / maxRadius;
+      let rawThrottle = -dy / maxRadius;
+      let rawSteer = dx / maxRadius;
+
+      // Deadzone filtering
+      if (Math.abs(rawThrottle) < deadzone) rawThrottle = 0;
+      if (Math.abs(rawSteer) < deadzone) rawSteer = 0;
+
+      // Quadratic precision curve
+      const throttle = Math.sign(rawThrottle) * Math.pow(Math.abs(rawThrottle), 1.2);
+      const steer = Math.sign(rawSteer) * Math.pow(Math.abs(rawSteer), 1.2);
+
       world.setAnalogInput(throttle, steer);
     };
 
@@ -447,7 +558,96 @@ function initPortfolioApp() {
     panelJoystick.addEventListener('pointercancel', resetJoystick);
   }
 
-  // Mobile D-Pad Touch Listeners
+  // Option 2: Interactive Steering Wheel + Pedals (Setir Mobil Proposional)
+  if (panelWheel && steeringWheel) {
+    let isWheelDragging = false;
+    const maxWheelDeg = 115;
+
+    const updateWheel = (clientX: number, clientY: number) => {
+      const rect = panelWheel.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+
+      // Angle tracking relative to top 12 o'clock
+      let deg = (Math.atan2(dx, -dy) * 180) / Math.PI;
+      deg = Math.max(-maxWheelDeg, Math.min(maxWheelDeg, deg));
+
+      steeringWheel.style.transform = `rotate(${deg}deg)`;
+      if (wheelAngleHint) wheelAngleHint.textContent = `${Math.round(deg)}°`;
+
+      activeSteer = deg / maxWheelDeg;
+      world.setAnalogInput(activeThrottle, activeSteer);
+    };
+
+    const resetWheel = () => {
+      if (!isWheelDragging) return;
+      isWheelDragging = false;
+      activeSteer = 0;
+      steeringWheel.style.transform = 'rotate(0deg)';
+      if (wheelAngleHint) wheelAngleHint.textContent = '0°';
+      world.setAnalogInput(activeThrottle, 0);
+    };
+
+    panelWheel.addEventListener('pointerdown', (e) => {
+      isWheelDragging = true;
+      panelWheel.setPointerCapture(e.pointerId);
+      updateWheel(e.clientX, e.clientY);
+    });
+
+    panelWheel.addEventListener('pointermove', (e) => {
+      if (isWheelDragging) {
+        updateWheel(e.clientX, e.clientY);
+      }
+    });
+
+    panelWheel.addEventListener('pointerup', resetWheel);
+    panelWheel.addEventListener('pointercancel', resetWheel);
+
+    // Accelerator Gas Pedal
+    if (ctrlGasPedal) {
+      const startGas = (e: Event) => {
+        e.preventDefault();
+        gasActive = true;
+        ctrlGasPedal.classList.add('scale-95', 'brightness-125');
+        updatePedalThrottle();
+      };
+      const stopGas = (e: Event) => {
+        e.preventDefault();
+        gasActive = false;
+        ctrlGasPedal.classList.remove('scale-95', 'brightness-125');
+        updatePedalThrottle();
+      };
+      ctrlGasPedal.addEventListener('pointerdown', startGas);
+      ctrlGasPedal.addEventListener('pointerup', stopGas);
+      ctrlGasPedal.addEventListener('pointercancel', stopGas);
+      ctrlGasPedal.addEventListener('pointerleave', stopGas);
+    }
+
+    // Brake / Reverse Pedal
+    if (ctrlBrakePedal) {
+      const startBrake = (e: Event) => {
+        e.preventDefault();
+        brakeActive = true;
+        ctrlBrakePedal.classList.add('scale-95', 'brightness-125');
+        updatePedalThrottle();
+      };
+      const stopBrake = (e: Event) => {
+        e.preventDefault();
+        brakeActive = false;
+        ctrlBrakePedal.classList.remove('scale-95', 'brightness-125');
+        updatePedalThrottle();
+      };
+      ctrlBrakePedal.addEventListener('pointerdown', startBrake);
+      ctrlBrakePedal.addEventListener('pointerup', stopBrake);
+      ctrlBrakePedal.addEventListener('pointercancel', stopBrake);
+      ctrlBrakePedal.addEventListener('pointerleave', stopBrake);
+    }
+  }
+
+  // Option 3: Mobile D-Pad Touch Listeners
   const touchMap: Record<string, 'forward' | 'backward' | 'left' | 'right'> = {
     'ctrl-forward': 'forward',
     'ctrl-backward': 'backward',

@@ -21,8 +21,8 @@ export const CHECKPOINTS: Record<CheckpointKey, CheckpointConfig> = {
     label: 'Featured Projects',
     shortDesc: 'Jatim Bissa, Roaming Marketplace, flutter_mic_selector',
     color: '#bd93f9',
-    position: [-7, 0, -7],
-    parkingPos: [-5.2, 0, -5.2],
+    position: [-13, 0, -6],
+    parkingPos: [-11.5, 0, -4.5],
     parkingAngle: Math.PI * 0.25,
   },
   experience: {
@@ -30,8 +30,8 @@ export const CHECKPOINTS: Record<CheckpointKey, CheckpointConfig> = {
     label: 'Work Experience',
     shortDesc: 'De Vivace, DB KIIK, Telkom Univ Lab',
     color: '#ff79c6',
-    position: [7, 0, -7],
-    parkingPos: [5.2, 0, -5.2],
+    position: [13, 0, -6],
+    parkingPos: [11.5, 0, -4.5],
     parkingAngle: -Math.PI * 0.25,
   },
   skills: {
@@ -39,8 +39,8 @@ export const CHECKPOINTS: Record<CheckpointKey, CheckpointConfig> = {
     label: 'Technical Skills',
     shortDesc: 'Laravel, Flutter, SQL Optimization, OWASP',
     color: '#50fa7b',
-    position: [-7, 0, 7],
-    parkingPos: [-5.2, 0, 7.0],
+    position: [-11, 0, 7.5],
+    parkingPos: [-9.5, 0, 6.0],
     parkingAngle: Math.PI * 0.75,
   },
   education: {
@@ -48,8 +48,8 @@ export const CHECKPOINTS: Record<CheckpointKey, CheckpointConfig> = {
     label: 'Education & Honors',
     shortDesc: 'Telkom Univ S.Kom (GPA 3.70), Certifications',
     color: '#8be9fd',
-    position: [7, 0, 7],
-    parkingPos: [5.2, 0, 5.2],
+    position: [11, 0, 7.5],
+    parkingPos: [9.5, 0, 6.0],
     parkingAngle: -Math.PI * 0.75,
   },
   contact: {
@@ -57,8 +57,8 @@ export const CHECKPOINTS: Record<CheckpointKey, CheckpointConfig> = {
     label: 'Get in Touch',
     shortDesc: 'Email, LinkedIn, GitHub, Surabaya',
     color: '#f1fa8c',
-    position: [0, 0, -9],
-    parkingPos: [0, 0, -6.8],
+    position: [0, 0, -10],
+    parkingPos: [0, 0, -8.0],
     parkingAngle: 0,
   },
 };
@@ -108,18 +108,25 @@ export class PortfolioWorld {
   // Car kinematics
   private carGroup: THREE.Group;
   private carChassis!: THREE.Group;
+  private carBodyMesh!: THREE.Mesh;
   private wheels: THREE.Mesh[] = [];
   private speed = 0;
-  private baseMaxSpeed = 0.15;
-  private maxSpeed = 0.15;
-  private acceleration = 0.007;
-  private friction = 0.92;
+  private baseMaxSpeed = 0.16;
+  private maxSpeed = 0.16;
+  private acceleration = 0.0075;
+  private friction = 0.925;
   private steerAngle = 0;
-  private maxSteer = 0.042;
+  private maxSteer = 0.044;
   private carAngle = 0;
-  private carRadius = 13.5;
+  private lastDriftSfxTime = 0;
+  private isDriftingState = false;
 
-  // Physics recoil & suspension
+  // Wide stadium island bounds
+  private halfWidth = 20.2;
+  private halfDepth = 13.2;
+  private cornerRadius = 4.5;
+
+  // Recoil & suspension
   private carVerticalY = 0;
   private carVerticalVy = 0;
   private carPitchImpulse = 0;
@@ -157,7 +164,7 @@ export class PortfolioWorld {
   private animatedProps: { mesh: THREE.Object3D; update: (time: number) => void }[] = [];
   private isNight = false;
 
-  // Collisions
+  // Collisions (Checkpoints are pass-through / transparent, only scenery & fountain collide)
   private obstacles: ObstacleCollider[] = [];
 
   // Interactive items
@@ -183,7 +190,15 @@ export class PortfolioWorld {
   // Callbacks
   private onNearCheckpoint: (cp: CheckpointConfig | null) => void;
   private onSelectCheckpoint: (cp: CheckpointConfig) => void;
-  private onCarUpdate?: (x: number, z: number, angle: number, speed: number) => void;
+  private onCarUpdate?: (
+    x: number,
+    z: number,
+    angle: number,
+    speed: number,
+    maxSpeed: number,
+    isDrifting: boolean,
+    isNitro: boolean
+  ) => void;
   private onStarCollected?: (collected: number, total: number) => void;
 
   constructor(
@@ -191,7 +206,15 @@ export class PortfolioWorld {
     callbacks: {
       onNearCheckpoint: (cp: CheckpointConfig | null) => void;
       onSelectCheckpoint: (cp: CheckpointConfig) => void;
-      onCarUpdate?: (x: number, z: number, angle: number, speed: number) => void;
+      onCarUpdate?: (
+        x: number,
+        z: number,
+        angle: number,
+        speed: number,
+        maxSpeed: number,
+        isDrifting: boolean,
+        isNitro: boolean
+      ) => void;
       onStarCollected?: (collected: number, total: number) => void;
     }
   ) {
@@ -205,12 +228,12 @@ export class PortfolioWorld {
     // Scene with morning sky
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#78bbf5');
-    this.scene.fog = new THREE.FogExp2('#8ec8f6', 0.016);
+    this.scene.fog = new THREE.FogExp2('#8ec8f6', 0.014);
 
     // Camera
     const aspect = container.clientWidth / container.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 120);
-    this.camera.position.set(13, 15, 13);
+    this.camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 140);
+    this.camera.position.set(12, 16, 14);
     this.camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -240,6 +263,22 @@ export class PortfolioWorld {
     this.animate();
   }
 
+  private createRoundedRectShape(w: number, d: number, r: number): THREE.Shape {
+    const shape = new THREE.Shape();
+    const hW = w / 2;
+    const hD = d / 2;
+    shape.moveTo(-hW + r, -hD);
+    shape.lineTo(hW - r, -hD);
+    shape.quadraticCurveTo(hW, -hD, hW, -hD + r);
+    shape.lineTo(hW, hD - r);
+    shape.quadraticCurveTo(hW, hD, hW - r, hD);
+    shape.lineTo(-hW + r, hD);
+    shape.quadraticCurveTo(-hW, hD, -hW, hD - r);
+    shape.lineTo(-hW, -hD + r);
+    shape.quadraticCurveTo(-hW, -hD, -hW + r, -hD);
+    return shape;
+  }
+
   private setupSkyAndLighting() {
     this.ambientLight = new THREE.AmbientLight('#e0f2fe', 0.95);
     this.scene.add(this.ambientLight);
@@ -249,29 +288,29 @@ export class PortfolioWorld {
 
     // Golden morning sun directional light
     this.sunLight = new THREE.DirectionalLight('#fff4e6', 1.85);
-    this.sunLight.position.set(18, 26, 14);
+    this.sunLight.position.set(24, 32, 18);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
     this.sunLight.shadow.mapSize.height = 2048;
     this.sunLight.shadow.camera.near = 0.5;
-    this.sunLight.shadow.camera.far = 70;
-    this.sunLight.shadow.camera.left = -22;
-    this.sunLight.shadow.camera.right = 22;
-    this.sunLight.shadow.camera.top = 22;
-    this.sunLight.shadow.camera.bottom = -22;
+    this.sunLight.shadow.camera.far = 85;
+    this.sunLight.shadow.camera.left = -28;
+    this.sunLight.shadow.camera.right = 28;
+    this.sunLight.shadow.camera.top = 24;
+    this.sunLight.shadow.camera.bottom = -24;
     this.sunLight.shadow.bias = -0.0004;
     this.scene.add(this.sunLight);
 
     // 3D Sun object in the sky
     this.sunGroup = new THREE.Group();
-    this.sunGroup.position.set(22, 28, 16);
+    this.sunGroup.position.set(28, 32, 20);
 
-    const sunCoreGeo = new THREE.SphereGeometry(2.2, 24, 24);
+    const sunCoreGeo = new THREE.SphereGeometry(2.4, 24, 24);
     const sunCoreMat = new THREE.MeshBasicMaterial({ color: '#fde047' });
     const sunCore = new THREE.Mesh(sunCoreGeo, sunCoreMat);
     this.sunGroup.add(sunCore);
 
-    const sunHaloGeo = new THREE.RingGeometry(2.5, 4.2, 32);
+    const sunHaloGeo = new THREE.RingGeometry(2.8, 4.8, 32);
     const sunHaloMat = new THREE.MeshBasicMaterial({
       color: '#fef08a',
       transparent: true,
@@ -282,14 +321,13 @@ export class PortfolioWorld {
     sunHalo.lookAt(0, 0, 0);
     this.sunGroup.add(sunHalo);
 
-    // Stylized sun rays
-    const raysCount = 8;
+    const raysCount = 10;
     for (let i = 0; i < raysCount; i++) {
       const angle = (i / raysCount) * Math.PI * 2;
-      const rayGeo = new THREE.ConeGeometry(0.35, 1.6, 4);
+      const rayGeo = new THREE.ConeGeometry(0.4, 1.8, 4);
       const rayMat = new THREE.MeshBasicMaterial({ color: '#fef08a' });
       const ray = new THREE.Mesh(rayGeo, rayMat);
-      ray.position.set(Math.cos(angle) * 3.3, Math.sin(angle) * 3.3, 0);
+      ray.position.set(Math.cos(angle) * 3.8, Math.sin(angle) * 3.8, 0);
       ray.rotation.z = angle - Math.PI / 2;
       this.sunGroup.add(ray);
     }
@@ -297,14 +335,14 @@ export class PortfolioWorld {
 
     // 3D Moon object (hidden in morning)
     this.moonGroup = new THREE.Group();
-    this.moonGroup.position.set(-22, -20, -18);
+    this.moonGroup.position.set(-28, -22, -20);
 
-    const moonCoreGeo = new THREE.SphereGeometry(1.8, 20, 20);
+    const moonCoreGeo = new THREE.SphereGeometry(2.0, 20, 20);
     const moonCoreMat = new THREE.MeshBasicMaterial({ color: '#f1f5f9' });
     const moonCore = new THREE.Mesh(moonCoreGeo, moonCoreMat);
     this.moonGroup.add(moonCore);
 
-    const moonHaloGeo = new THREE.RingGeometry(2.1, 3.6, 32);
+    const moonHaloGeo = new THREE.RingGeometry(2.3, 3.8, 32);
     const moonHaloMat = new THREE.MeshBasicMaterial({
       color: '#c7d2fe',
       transparent: true,
@@ -318,11 +356,11 @@ export class PortfolioWorld {
 
     // Drifting morning clouds
     const cloudPositions: [number, number, number, number][] = [
-      [-16, 17, -12, 1.2],
-      [14, 19, -15, 1.4],
-      [-12, 16, 14, 1.1],
-      [18, 18, 12, 1.3],
-      [0, 21, -20, 1.5],
+      [-22, 19, -15, 1.3],
+      [18, 21, -18, 1.5],
+      [-16, 18, 16, 1.2],
+      [22, 20, 14, 1.4],
+      [0, 23, -22, 1.6],
     ];
 
     cloudPositions.forEach(([x, y, z, scale]) => {
@@ -336,11 +374,11 @@ export class PortfolioWorld {
       });
 
       const puffOffsets: [number, number, number, number][] = [
-        [0, 0, 0, 1.3],
-        [-1.1, -0.2, 0.2, 0.9],
-        [1.1, -0.2, -0.2, 1.0],
-        [-0.5, 0.6, 0.1, 0.85],
-        [0.6, 0.5, -0.1, 0.9],
+        [0, 0, 0, 1.4],
+        [-1.2, -0.2, 0.2, 1.0],
+        [1.2, -0.2, -0.2, 1.1],
+        [-0.5, 0.6, 0.1, 0.9],
+        [0.6, 0.5, -0.1, 0.95],
       ];
 
       puffOffsets.forEach(([px, py, pz, pRadius]) => {
@@ -356,12 +394,12 @@ export class PortfolioWorld {
     });
 
     // Night stars (hidden initially)
-    const starCount = 180;
+    const starCount = 220;
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * (Math.PI * 0.4);
-      const r = 45;
+      const r = 50;
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i * 3 + 1] = r * Math.cos(phi) + 5;
       starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
@@ -370,7 +408,7 @@ export class PortfolioWorld {
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMat = new THREE.PointsMaterial({
       color: '#f8fafc',
-      size: 0.7,
+      size: 0.75,
       transparent: true,
       opacity: 0,
     });
@@ -379,136 +417,182 @@ export class PortfolioWorld {
   }
 
   private setupIsland() {
-    // Sculpted floating diorama bedrock underneath
-    const cliffGeo = new THREE.CylinderGeometry(15, 6, 5.5, 20);
-    const cliffMat = new THREE.MeshStandardMaterial({
-      color: '#282a36',
-      roughness: 0.9,
-      flatShading: true,
-    });
-    const cliff = new THREE.Mesh(cliffGeo, cliffMat);
-    cliff.position.y = -2.75;
-    cliff.receiveShadow = true;
-    this.scene.add(cliff);
+    // 1. Expansive Rounded Stadium Top Surface (42 wide x 28 deep)
+    const islandShape = this.createRoundedRectShape(42, 28, 4.5);
+    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
+      depth: 0.35,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.2,
+      bevelThickness: 0.15,
+    };
+    const topGeo = new THREE.ExtrudeGeometry(islandShape, extrudeSettings);
+    topGeo.rotateX(Math.PI / 2);
 
-    // Hanging bedrock boulders
-    const boulderCoords: [number, number, number, number][] = [
-      [0, -5.8, 0, 2.2],
-      [-4.5, -4.8, 2.5, 1.8],
-      [4.2, -4.9, -3.1, 1.9],
-      [-2.8, -5.2, -4.2, 1.6],
-      [3.5, -5.1, 3.8, 1.7],
+    const topMat = new THREE.MeshStandardMaterial({
+      color: '#2e3242',
+      roughness: 0.85,
+    });
+    const topMesh = new THREE.Mesh(topGeo, topMat);
+    topMesh.position.y = 0.05;
+    topMesh.receiveShadow = true;
+    this.scene.add(topMesh);
+
+    // 2. Sculpted tiered bedrock underbelly
+    const bedTier1Shape = this.createRoundedRectShape(39, 25, 4.0);
+    const bedTier1Geo = new THREE.ExtrudeGeometry(bedTier1Shape, { depth: 1.6, bevelEnabled: true, bevelSize: 0.3, bevelThickness: 0.2 });
+    bedTier1Geo.rotateX(Math.PI / 2);
+    const cliffMat = new THREE.MeshStandardMaterial({ color: '#252733', roughness: 0.9, flatShading: true });
+    const bedTier1 = new THREE.Mesh(bedTier1Geo, cliffMat);
+    bedTier1.position.y = -1.5;
+    bedTier1.receiveShadow = true;
+    this.scene.add(bedTier1);
+
+    const bedTier2Shape = this.createRoundedRectShape(30, 18, 3.5);
+    const bedTier2Geo = new THREE.ExtrudeGeometry(bedTier2Shape, { depth: 2.2, bevelEnabled: true, bevelSize: 0.4, bevelThickness: 0.3 });
+    bedTier2Geo.rotateX(Math.PI / 2);
+    const bedTier2 = new THREE.Mesh(bedTier2Geo, cliffMat);
+    bedTier2.position.y = -3.4;
+    bedTier2.receiveShadow = true;
+    this.scene.add(bedTier2);
+
+    // Hanging bedrock boulders underneath
+    const boulders: [number, number, number, number][] = [
+      [0, -5.8, 0, 2.5],
+      [-9.5, -5.2, 2.5, 2.0],
+      [9.5, -5.2, -2.5, 2.1],
+      [-14.5, -4.8, -1.0, 1.8],
+      [14.5, -4.8, 1.0, 1.8],
+      [-3.0, -5.5, -4.5, 1.9],
+      [3.0, -5.5, 4.5, 1.9],
     ];
-    boulderCoords.forEach(([bx, by, bz, bRadius]) => {
+    boulders.forEach(([bx, by, bz, bRadius]) => {
       const bGeo = new THREE.DodecahedronGeometry(bRadius, 0);
       const bMesh = new THREE.Mesh(bGeo, cliffMat);
       bMesh.position.set(bx, by, bz);
       this.scene.add(bMesh);
     });
 
-    // Top lush diorama ground plane
-    const topGeo = new THREE.CylinderGeometry(15.05, 15.05, 0.2, 48);
-    const topMat = new THREE.MeshStandardMaterial({
-      color: '#34384a',
-      roughness: 0.85,
-    });
-    const top = new THREE.Mesh(topGeo, topMat);
-    top.position.y = 0.05;
-    top.receiveShadow = true;
-    this.scene.add(top);
+    // 3. Wide Stadium Asphalt Touring Road Network
+    // Outer Circuit Road: Extrude a wide hollow rounded stadium band
+    const roadOuterShape = this.createRoundedRectShape(36, 22, 3.8);
+    const roadInnerHole = new THREE.Path();
+    const hW = 28 / 2;
+    const hD = 14 / 2;
+    const r = 2.5;
+    roadInnerHole.moveTo(-hW + r, -hD);
+    roadInnerHole.lineTo(hW - r, -hD);
+    roadInnerHole.quadraticCurveTo(hW, -hD, hW, -hD + r);
+    roadInnerHole.lineTo(hW, hD - r);
+    roadInnerHole.quadraticCurveTo(hW, hD, hW - r, hD);
+    roadInnerHole.lineTo(-hW + r, hD);
+    roadInnerHole.quadraticCurveTo(-hW, hD, -hW, hD - r);
+    roadInnerHole.lineTo(-hW, -hD + r);
+    roadInnerHole.quadraticCurveTo(-hW, -hD, -hW + r, -hD);
+    roadOuterShape.holes.push(roadInnerHole);
 
-    // Outer stone guardrail & boundary curb
-    const curbGeo = new THREE.RingGeometry(13.6, 14.8, 48);
-    const curbMat = new THREE.MeshStandardMaterial({
-      color: '#44475a',
-      roughness: 0.7,
-      side: THREE.DoubleSide,
-    });
-    const curb = new THREE.Mesh(curbGeo, curbMat);
-    curb.rotation.x = -Math.PI / 2;
-    curb.position.y = 0.08;
-    curb.receiveShadow = true;
-    this.scene.add(curb);
+    const roadGeo = new THREE.ShapeGeometry(roadOuterShape);
+    roadGeo.rotateX(-Math.PI / 2);
+    const roadMat = new THREE.MeshStandardMaterial({ color: '#1a1b24', roughness: 0.85, side: THREE.DoubleSide });
+    const roadMesh = new THREE.Mesh(roadGeo, roadMat);
+    roadMesh.position.y = 0.08;
+    roadMesh.receiveShadow = true;
+    this.scene.add(roadMesh);
 
-    // Outer safety barrier posts around island edge
-    const postCount = 28;
-    for (let i = 0; i < postCount; i++) {
-      const angle = (i / postCount) * Math.PI * 2;
-      const r = 13.9;
+    // Central Crossing Avenue connecting East & West through the fountain plaza
+    const crossGeo = new THREE.PlaneGeometry(36, 4.0);
+    const crossMesh = new THREE.Mesh(crossGeo, roadMat);
+    crossMesh.rotation.x = -Math.PI / 2;
+    crossMesh.position.set(0, 0.075, 0);
+    crossMesh.receiveShadow = true;
+    this.scene.add(crossMesh);
+
+    // North-South Central Avenue
+    const nsGeo = new THREE.PlaneGeometry(4.0, 22);
+    const nsMesh = new THREE.Mesh(nsGeo, roadMat);
+    nsMesh.rotation.x = -Math.PI / 2;
+    nsMesh.position.set(0, 0.075, 0);
+    nsMesh.receiveShadow = true;
+    this.scene.add(nsMesh);
+
+    // Dashed center road lines along North & South long straights
+    for (let x = -13; x <= 13; x += 2.2) {
+      const dashGeo = new THREE.PlaneGeometry(0.9, 0.22);
+      const dashMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c', side: THREE.DoubleSide });
+
+      // North straight
+      const dashN = new THREE.Mesh(dashGeo, dashMat);
+      dashN.rotation.x = -Math.PI / 2;
+      dashN.position.set(x, 0.09, -9.0);
+      this.scene.add(dashN);
+
+      // South straight
+      const dashS = new THREE.Mesh(dashGeo, dashMat);
+      dashS.rotation.x = -Math.PI / 2;
+      dashS.position.set(x, 0.09, 9.0);
+      this.scene.add(dashS);
+    }
+
+    // East & West vertical straights dashed lines
+    for (let z = -6.5; z <= 6.5; z += 2.2) {
+      const dashGeo = new THREE.PlaneGeometry(0.22, 0.9);
+      const dashMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c', side: THREE.DoubleSide });
+
+      // West straight
+      const dashW = new THREE.Mesh(dashGeo, dashMat);
+      dashW.rotation.x = -Math.PI / 2;
+      dashW.position.set(-16.0, 0.09, z);
+      this.scene.add(dashW);
+
+      // East straight
+      const dashE = new THREE.Mesh(dashGeo, dashMat);
+      dashE.rotation.x = -Math.PI / 2;
+      dashE.position.set(16.0, 0.09, z);
+      this.scene.add(dashE);
+    }
+
+    // Outer Stadium Perimeter Barrier Posts
+    const perimeterPoints: [number, number][] = [];
+    const step = 1.8;
+    // Top & Bottom edges
+    for (let x = -16; x <= 16; x += step) {
+      perimeterPoints.push([x, -13.2]);
+      perimeterPoints.push([x, 13.2]);
+    }
+    // Left & Right edges
+    for (let z = -9; z <= 9; z += step) {
+      perimeterPoints.push([-20.2, z]);
+      perimeterPoints.push([20.2, z]);
+    }
+
+    perimeterPoints.forEach(([px, pz], idx) => {
       const postGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.65, 8);
       const postMat = new THREE.MeshStandardMaterial({
-        color: i % 2 === 0 ? '#ffb86c' : '#f8f8f2',
+        color: idx % 2 === 0 ? '#ffb86c' : '#f8f8f2',
         roughness: 0.5,
       });
       const post = new THREE.Mesh(postGeo, postMat);
-      post.position.set(Math.cos(angle) * r, 0.35, Math.sin(angle) * r);
+      post.position.set(px, 0.35, pz);
       post.castShadow = true;
       this.scene.add(post);
-    }
-
-    // Asphalt racing road track
-    const roadGeo = new THREE.RingGeometry(5.4, 9.6, 48);
-    const roadMat = new THREE.MeshStandardMaterial({
-      color: '#1f2029',
-      roughness: 0.85,
-      side: THREE.DoubleSide,
     });
-    const road = new THREE.Mesh(roadGeo, roadMat);
-    road.rotation.x = -Math.PI / 2;
-    road.position.y = 0.09;
-    road.receiveShadow = true;
-    this.scene.add(road);
 
-    // Inner & Outer road curbs
-    const innerCurbGeo = new THREE.RingGeometry(5.2, 5.4, 48);
-    const outerCurbGeo = new THREE.RingGeometry(9.6, 9.8, 48);
-    const roadCurbMat = new THREE.MeshStandardMaterial({
-      color: '#6272a4',
-      roughness: 0.6,
-      side: THREE.DoubleSide,
-    });
-    const innerCurb = new THREE.Mesh(innerCurbGeo, roadCurbMat);
-    innerCurb.rotation.x = -Math.PI / 2;
-    innerCurb.position.y = 0.1;
-    this.scene.add(innerCurb);
-
-    const outerCurb = new THREE.Mesh(outerCurbGeo, roadCurbMat);
-    outerCurb.rotation.x = -Math.PI / 2;
-    outerCurb.position.y = 0.1;
-    this.scene.add(outerCurb);
-
-    // Dashed center road markings
-    const dashCount = 24;
-    for (let i = 0; i < dashCount; i++) {
-      const angle = (i / dashCount) * Math.PI * 2;
-      const r = 7.5;
-      const dashGeo = new THREE.PlaneGeometry(0.24, 0.85);
-      const dashMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c', side: THREE.DoubleSide });
-      const dash = new THREE.Mesh(dashGeo, dashMat);
-      dash.position.set(Math.cos(angle) * r, 0.11, Math.sin(angle) * r);
-      dash.rotation.x = -Math.PI / 2;
-      dash.rotation.z = -angle;
-      this.scene.add(dash);
-    }
-
-    // Grand tiered central plaza
-    const plazaBaseGeo = new THREE.CylinderGeometry(3.8, 4.0, 0.25, 24);
+    // 4. Grand Central Fountain Plaza
+    const plazaBaseGeo = new THREE.CylinderGeometry(3.6, 3.8, 0.25, 24);
     const plazaBaseMat = new THREE.MeshStandardMaterial({ color: '#44475a', roughness: 0.6 });
     const plazaBase = new THREE.Mesh(plazaBaseGeo, plazaBaseMat);
     plazaBase.position.y = 0.15;
     plazaBase.receiveShadow = true;
     this.scene.add(plazaBase);
 
-    // Hexagonal fountain basin
-    const fountainBasinGeo = new THREE.CylinderGeometry(2.0, 2.2, 0.55, 6);
+    const fountainBasinGeo = new THREE.CylinderGeometry(2.0, 2.2, 0.55, 8);
     const fountainBasinMat = new THREE.MeshStandardMaterial({ color: '#6272a4', roughness: 0.4 });
     const fountainBasin = new THREE.Mesh(fountainBasinGeo, fountainBasinMat);
     fountainBasin.position.set(0, 0.45, 0);
     fountainBasin.castShadow = true;
-    fountainBasin.receiveShadow = true;
     this.scene.add(fountainBasin);
 
-    // Water surface inside fountain
     const waterGeo = new THREE.CircleGeometry(1.8, 16);
     const waterMat = new THREE.MeshStandardMaterial({
       color: '#8be9fd',
@@ -522,8 +606,7 @@ export class PortfolioWorld {
     water.position.y = 0.65;
     this.scene.add(water);
 
-    // Fountain floating energy crystal
-    const crystalGeo = new THREE.OctahedronGeometry(0.7, 0);
+    const crystalGeo = new THREE.OctahedronGeometry(0.75, 0);
     const crystalMat = new THREE.MeshStandardMaterial({
       color: '#bd93f9',
       emissive: '#bd93f9',
@@ -536,10 +619,9 @@ export class PortfolioWorld {
     crystal.castShadow = true;
     this.scene.add(crystal);
 
-    // Register central fountain collider
+    // Register central fountain as solid obstacle
     this.obstacles.push({ x: 0, z: 0, radius: 2.3 });
 
-    // Animated crystal floating & spinning
     this.animatedProps.push({
       mesh: crystal,
       update: (time) => {
@@ -556,9 +638,10 @@ export class PortfolioWorld {
     car.add(this.carChassis);
 
     // Car main body chassis
+    const savedPaint = typeof window !== 'undefined' ? localStorage.getItem('porto_car_paint') : null;
     const bodyGeo = new THREE.BoxGeometry(1.2, 0.48, 2.0);
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: '#bd93f9',
+      color: savedPaint || '#bd93f9',
       roughness: 0.3,
       metalness: 0.15,
     });
@@ -566,6 +649,7 @@ export class PortfolioWorld {
     body.position.y = 0.45;
     body.castShadow = true;
     this.carChassis.add(body);
+    this.carBodyMesh = body;
 
     // Roof & Cabin
     const cabinGeo = new THREE.BoxGeometry(0.96, 0.45, 1.1);
@@ -731,7 +815,7 @@ export class PortfolioWorld {
       this.wheels.push(tire);
     });
 
-    // Antenna with playful top sphere
+    // Antenna with top bobble
     const antGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.6, 8);
     const antMat = new THREE.MeshStandardMaterial({ color: '#f8f8f2' });
     const antenna = new THREE.Mesh(antGeo, antMat);
@@ -752,29 +836,48 @@ export class PortfolioWorld {
     return car;
   }
 
+  // Helper to add glowing wireframe outline to holographic models
+  private addWireframeEdges(mesh: THREE.Mesh, colorHex: string) {
+    const edgesGeo = new THREE.EdgesGeometry(mesh.geometry);
+    const edgesMat = new THREE.LineBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: 0.8,
+      linewidth: 1.5,
+    });
+    const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+    mesh.add(wireframe);
+  }
+
+  // Checkpoints: "Tembus Pandang" (Translucent Holographic Glass) & Pass-Through (NO solid collision)
   private setupCheckpoints() {
     Object.values(CHECKPOINTS).forEach((cp) => {
       const group = new THREE.Group();
       group.position.set(...cp.position);
 
       // Checkpoint parking base
-      const baseGeo = new THREE.CylinderGeometry(1.8, 1.9, 0.22, 24);
-      const baseMat = new THREE.MeshStandardMaterial({ color: '#44475a', roughness: 0.5 });
+      const baseGeo = new THREE.CylinderGeometry(1.9, 2.0, 0.18, 24);
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: '#44475a',
+        roughness: 0.4,
+        transparent: true,
+        opacity: 0.8,
+      });
       const base = new THREE.Mesh(baseGeo, baseMat);
       base.receiveShadow = true;
       group.add(base);
 
       // Pulsing glow ring
-      const ringGeo = new THREE.RingGeometry(1.9, 2.3, 32);
+      const ringGeo = new THREE.RingGeometry(2.0, 2.4, 32);
       const ringMat = new THREE.MeshBasicMaterial({
         color: cp.color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.75,
       });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.15;
+      ring.position.y = 0.12;
       group.add(ring);
       this.rings.push(ring);
 
@@ -800,178 +903,135 @@ export class PortfolioWorld {
       group.add(pointLight);
       this.streetLamps.push({ light: pointLight, mesh: lampSphere });
 
-      // Architectural 3D Landmarks (Not flat boxes)
+      // Holographic / Translucent "Tembus Pandang" Architectural Landmark Models
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: cp.color,
+        emissive: cp.color,
+        emissiveIntensity: 0.25,
+        roughness: 0.15,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.55,
+      });
+
+      const accentGlassMat = new THREE.MeshStandardMaterial({
+        color: '#f8f8f2',
+        emissive: cp.color,
+        emissiveIntensity: 0.35,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.65,
+      });
+
       if (cp.key === 'projects') {
-        // Tech Studio & Arcade Lab
+        // Holographic Tech Studio & Arcade Lab
         const studio = new THREE.Group();
 
-        // 1st floor showroom
         const f1Geo = new THREE.BoxGeometry(2.2, 1.2, 1.8);
-        const f1Mat = new THREE.MeshStandardMaterial({ color: '#bd93f9', roughness: 0.3 });
-        const f1 = new THREE.Mesh(f1Geo, f1Mat);
+        const f1 = new THREE.Mesh(f1Geo, glassMat);
         f1.position.y = 0.6;
-        f1.castShadow = true;
+        this.addWireframeEdges(f1, cp.color);
         studio.add(f1);
 
-        // 2nd floor mezzanine terrace
         const f2Geo = new THREE.BoxGeometry(1.6, 1.0, 1.4);
-        const f2Mat = new THREE.MeshStandardMaterial({ color: '#343746', roughness: 0.4 });
-        const f2 = new THREE.Mesh(f2Geo, f2Mat);
+        const f2 = new THREE.Mesh(f2Geo, accentGlassMat);
         f2.position.set(-0.2, 1.7, -0.1);
-        f2.castShadow = true;
+        this.addWireframeEdges(f2, '#bd93f9');
         studio.add(f2);
 
-        // Angled glass roof
         const roofGeo = new THREE.ConeGeometry(1.3, 0.7, 4);
-        const roofMat = new THREE.MeshStandardMaterial({ color: '#6272a4', metalness: 0.5 });
-        const roof = new THREE.Mesh(roofGeo, roofMat);
+        const roof = new THREE.Mesh(roofGeo, glassMat);
         roof.position.set(-0.2, 2.5, -0.1);
         roof.rotation.y = Math.PI / 4;
         studio.add(roof);
 
-        // Billboard Hologram Screen
-        const screenFrame = new THREE.BoxGeometry(1.4, 0.85, 0.1);
-        const screenFrameMat = new THREE.MeshStandardMaterial({ color: '#282a36' });
-        const frame = new THREE.Mesh(screenFrame, screenFrameMat);
-        frame.position.set(0, 1.4, 0.95);
-        studio.add(frame);
-
+        // Screen frame
         const screenGeo = new THREE.PlaneGeometry(1.2, 0.65);
-        const screenMat = new THREE.MeshBasicMaterial({ color: '#50fa7b' });
+        const screenMat = new THREE.MeshBasicMaterial({
+          color: '#50fa7b',
+          transparent: true,
+          opacity: 0.8,
+          side: THREE.DoubleSide,
+        });
         const screen = new THREE.Mesh(screenGeo, screenMat);
-        screen.position.set(0, 1.4, 1.01);
+        screen.position.set(0, 1.4, 0.95);
         studio.add(screen);
 
-        // Rooftop antenna tower
-        const antGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.9, 8);
-        const antMat = new THREE.MeshStandardMaterial({ color: '#f8f8f2' });
-        const ant = new THREE.Mesh(antGeo, antMat);
-        ant.position.set(0.6, 2.6, 0.3);
-        studio.add(ant);
-
         group.add(studio);
-        this.obstacles.push({ x: cp.position[0], z: cp.position[2], radius: 2.1 });
       } else if (cp.key === 'experience') {
-        // Career Tower / Corporate HQ
+        // Holographic Career Tower
         const tower = new THREE.Group();
 
-        // Tiered skyscraper levels
         const tier1Geo = new THREE.BoxGeometry(2.0, 1.4, 1.8);
-        const tier1Mat = new THREE.MeshStandardMaterial({ color: '#ff79c6', roughness: 0.3 });
-        const tier1 = new THREE.Mesh(tier1Geo, tier1Mat);
+        const tier1 = new THREE.Mesh(tier1Geo, glassMat);
         tier1.position.y = 0.7;
-        tier1.castShadow = true;
+        this.addWireframeEdges(tier1, cp.color);
         tower.add(tier1);
 
         const tier2Geo = new THREE.BoxGeometry(1.5, 1.2, 1.4);
-        const tier2Mat = new THREE.MeshStandardMaterial({ color: '#343746', roughness: 0.3 });
-        const tier2 = new THREE.Mesh(tier2Geo, tier2Mat);
+        const tier2 = new THREE.Mesh(tier2Geo, accentGlassMat);
         tier2.position.set(0, 2.0, 0);
-        tier2.castShadow = true;
+        this.addWireframeEdges(tier2, '#ff79c6');
         tower.add(tier2);
 
-        // Rooftop helipad ('H')
         const heliGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.08, 16);
-        const heliMat = new THREE.MeshStandardMaterial({ color: '#44475a' });
-        const helipad = new THREE.Mesh(heliGeo, heliMat);
+        const helipad = new THREE.Mesh(heliGeo, glassMat);
         helipad.position.set(0, 2.64, 0);
         tower.add(helipad);
 
         const hMarkGeo = new THREE.PlaneGeometry(0.5, 0.5);
-        const hMarkMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c', side: THREE.DoubleSide });
+        const hMarkMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c', side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
         const hMark = new THREE.Mesh(hMarkGeo, hMarkMat);
         hMark.rotation.x = -Math.PI / 2;
         hMark.position.set(0, 2.69, 0);
         tower.add(hMark);
 
-        // Entrance awning
-        const awningGeo = new THREE.BoxGeometry(1.1, 0.12, 0.6);
-        const awningMat = new THREE.MeshStandardMaterial({ color: '#ffb86c' });
-        const awning = new THREE.Mesh(awningGeo, awningMat);
-        awning.position.set(0, 0.7, 1.1);
-        tower.add(awning);
-
         group.add(tower);
-        this.obstacles.push({ x: cp.position[0], z: cp.position[2], radius: 2.1 });
       } else if (cp.key === 'skills') {
-        // Tech Forge & Energy Lab
+        // Holographic Tech Forge
         const forge = new THREE.Group();
 
-        // Main industrial generator dome
         const domeGeo = new THREE.SphereGeometry(1.2, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-        const domeMat = new THREE.MeshStandardMaterial({ color: '#50fa7b', roughness: 0.4 });
-        const dome = new THREE.Mesh(domeGeo, domeMat);
+        const dome = new THREE.Mesh(domeGeo, glassMat);
         dome.position.y = 0.5;
-        dome.castShadow = true;
+        this.addWireframeEdges(dome, cp.color);
         forge.add(dome);
 
-        // Twin glowing plasma coils
         const coilGeo = new THREE.CylinderGeometry(0.25, 0.3, 1.8, 12);
-        const coilMat = new THREE.MeshStandardMaterial({
-          color: '#8be9fd',
-          emissive: '#8be9fd',
-          emissiveIntensity: 0.5,
-        });
-        const coilL = new THREE.Mesh(coilGeo, coilMat);
+        const coilL = new THREE.Mesh(coilGeo, accentGlassMat);
         coilL.position.set(-1.0, 0.9, 0.6);
+        this.addWireframeEdges(coilL, '#50fa7b');
         forge.add(coilL);
 
         const coilR = coilL.clone();
         coilR.position.x = 1.0;
         forge.add(coilR);
 
-        // Solar panels
-        const panelGeo = new THREE.PlaneGeometry(0.8, 0.5);
-        const panelMat = new THREE.MeshStandardMaterial({
-          color: '#282a36',
-          metalness: 0.9,
-          roughness: 0.2,
-          side: THREE.DoubleSide,
-        });
-        const panel = new THREE.Mesh(panelGeo, panelMat);
-        panel.rotation.x = -Math.PI / 3;
-        panel.position.set(0, 1.4, 0.9);
-        forge.add(panel);
-
         group.add(forge);
-        this.obstacles.push({ x: cp.position[0], z: cp.position[2], radius: 2.1 });
       } else if (cp.key === 'education') {
-        // Academy Campus & Observatory
+        // Holographic Academy & Observatory
         const academy = new THREE.Group();
 
-        // Academic building base
         const bldgGeo = new THREE.BoxGeometry(1.8, 1.2, 1.4);
-        const bldgMat = new THREE.MeshStandardMaterial({ color: '#8be9fd', roughness: 0.5 });
-        const bldg = new THREE.Mesh(bldgGeo, bldgMat);
+        const bldg = new THREE.Mesh(bldgGeo, glassMat);
         bldg.position.y = 0.6;
-        bldg.castShadow = true;
+        this.addWireframeEdges(bldg, cp.color);
         academy.add(bldg);
 
-        // Classical columns
-        const colGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.1, 8);
-        const colMat = new THREE.MeshStandardMaterial({ color: '#f8f8f2' });
-        const colL = new THREE.Mesh(colGeo, colMat);
-        colL.position.set(-0.7, 0.55, 0.8);
-        academy.add(colL);
-
-        const colR = colL.clone();
-        colR.position.x = 0.7;
-        academy.add(colR);
-
-        // Spherical observatory dome
         const obsGeo = new THREE.SphereGeometry(0.75, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-        const obsMat = new THREE.MeshStandardMaterial({
-          color: '#f1fa8c',
-          metalness: 0.7,
-          roughness: 0.2,
-        });
-        const obs = new THREE.Mesh(obsGeo, obsMat);
+        const obs = new THREE.Mesh(obsGeo, accentGlassMat);
         obs.position.set(0, 1.2, 0);
+        this.addWireframeEdges(obs, '#8be9fd');
         academy.add(obs);
 
-        // Golden Knowledge Trophy / Open Book
         const bookGeo = new THREE.BoxGeometry(0.6, 0.12, 0.4);
-        const bookMat = new THREE.MeshStandardMaterial({ color: '#ffb86c', metalness: 0.4 });
+        const bookMat = new THREE.MeshStandardMaterial({
+          color: '#f1fa8c',
+          emissive: '#f1fa8c',
+          emissiveIntensity: 0.5,
+          transparent: true,
+          opacity: 0.75,
+        });
         const book = new THREE.Mesh(bookGeo, bookMat);
         book.position.set(0, 2.15, 0);
         academy.add(book);
@@ -985,40 +1045,27 @@ export class PortfolioWorld {
         });
 
         group.add(academy);
-        this.obstacles.push({ x: cp.position[0], z: cp.position[2], radius: 2.1 });
       } else if (cp.key === 'contact') {
-        // Signal Outpost & Communications Tower
+        // Holographic Signal Outpost & Radio Tower
         const outpost = new THREE.Group();
 
-        // Outpost cabin
         const cabinGeo = new THREE.BoxGeometry(1.2, 0.9, 1.0);
-        const cabinMat = new THREE.MeshStandardMaterial({ color: '#6272a4', roughness: 0.6 });
-        const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+        const cabin = new THREE.Mesh(cabinGeo, glassMat);
         cabin.position.y = 0.45;
-        cabin.castShadow = true;
+        this.addWireframeEdges(cabin, cp.color);
         outpost.add(cabin);
 
-        // Lattice communications tower
         const towerGeo = new THREE.CylinderGeometry(0.1, 0.22, 2.2, 6);
-        const towerMat = new THREE.MeshStandardMaterial({ color: '#ff5555' });
-        const tower = new THREE.Mesh(towerGeo, towerMat);
+        const tower = new THREE.Mesh(towerGeo, accentGlassMat);
         tower.position.set(0.6, 1.5, -0.3);
+        this.addWireframeEdges(tower, '#ff5555');
         outpost.add(tower);
 
-        // Active rotating radar dish
         const radarGeo = new THREE.ConeGeometry(0.45, 0.3, 12);
-        const radarMat = new THREE.MeshStandardMaterial({ color: '#f1fa8c', metalness: 0.6 });
-        const radar = new THREE.Mesh(radarGeo, radarMat);
+        const radar = new THREE.Mesh(radarGeo, glassMat);
         radar.position.set(0.6, 2.7, -0.3);
         radar.rotation.x = Math.PI / 3;
         outpost.add(radar);
-
-        // Red mailbox prop
-        const boxGeo = new THREE.BoxGeometry(0.4, 0.5, 0.35);
-        const boxMat = new THREE.MeshStandardMaterial({ color: '#f1fa8c' });
-        const box = new THREE.Mesh(boxGeo, boxMat);
-        box.position.set(-0.8, 0.4, 0.6);
-        outpost.add(box);
 
         this.animatedProps.push({
           mesh: radar,
@@ -1028,7 +1075,6 @@ export class PortfolioWorld {
         });
 
         group.add(outpost);
-        this.obstacles.push({ x: cp.position[0], z: cp.position[2], radius: 1.8 });
       }
 
       this.scene.add(group);
@@ -1037,16 +1083,18 @@ export class PortfolioWorld {
   }
 
   private setupDecorations() {
-    // Stylized trees around island perimeter
+    // Stylized trees placed around stadium edges
     const treePositions: [number, number, number][] = [
-      [-11, -3, 1.1],
-      [-11, 4, 1.25],
-      [11, -2, 1.2],
-      [11, 4, 1.05],
-      [-3.5, 11.2, 1.3],
-      [4.2, 11.2, 1.15],
-      [-4.2, -11.5, 1.2],
-      [4.2, -11.5, 1.1],
+      [-18.5, -9.0, 1.15],
+      [-18.5, 9.0, 1.2],
+      [18.5, -9.0, 1.2],
+      [18.5, 9.0, 1.15],
+      [-9.0, -11.5, 1.25],
+      [9.0, -11.5, 1.1],
+      [-9.0, 11.5, 1.2],
+      [9.0, 11.5, 1.15],
+      [-19.0, 0, 1.3],
+      [19.0, 0, 1.3],
     ];
 
     treePositions.forEach(([x, z, scale]) => {
@@ -1060,7 +1108,6 @@ export class PortfolioWorld {
       trunk.castShadow = true;
       tree.add(trunk);
 
-      // Tiered low-poly pine foliage
       const foliageColors = ['#50fa7b', '#48c774', '#3ea662'];
       const fTiers = [
         { r: 1.1, h: 1.1, y: 1.1 },
@@ -1084,21 +1131,21 @@ export class PortfolioWorld {
       tree.scale.setScalar(scale);
       this.scene.add(tree);
 
-      // Register tree as obstacle collider
+      // Register solid obstacle for trees
       this.obstacles.push({ x, z, radius: 0.9 * scale });
     });
   }
 
   private setupTrafficCones() {
     const conePositions: [number, number, number][] = [
-      [2.5, 0, 5.5],
-      [-2.5, 0, 5.5],
-      [5.5, 0, 2.5],
-      [-5.5, 0, 2.5],
-      [2.5, 0, -5.5],
-      [-2.5, 0, -5.5],
-      [6.0, 0, -2.5],
-      [-6.0, 0, -2.5],
+      [-6.0, 0, -3.5],
+      [6.0, 0, -3.5],
+      [-6.0, 0, 3.5],
+      [6.0, 0, 3.5],
+      [-14.0, 0, 0],
+      [14.0, 0, 0],
+      [0, 0, -5.5],
+      [0, 0, 5.5],
     ];
 
     conePositions.forEach((pos) => {
@@ -1143,21 +1190,21 @@ export class PortfolioWorld {
     });
   }
 
-  // 5 Collectible floating golden stars
+  // 5 Collectible floating golden stars spread across wide touring tracks
   private setupCollectibles() {
     const starCoords: [number, number, number][] = [
-      [0, 0.7, 7.5],
-      [-7.5, 0.7, 0],
-      [7.5, 0.7, 0],
-      [-4.5, 0.7, -4.5],
-      [4.5, 0.7, -4.5],
+      [-16.0, 0.7, 0],
+      [16.0, 0.7, 0],
+      [0, 0.7, -9.0],
+      [-8.0, 0.7, 9.0],
+      [8.0, 0.7, 9.0],
     ];
 
     starCoords.forEach((pos) => {
       const starGroup = new THREE.Group();
       starGroup.position.set(pos[0], pos[1], pos[2]);
 
-      const starGeo = new THREE.OctahedronGeometry(0.35, 0);
+      const starGeo = new THREE.OctahedronGeometry(0.38, 0);
       const starMat = new THREE.MeshStandardMaterial({
         color: '#f1fa8c',
         emissive: '#f1fa8c',
@@ -1168,13 +1215,12 @@ export class PortfolioWorld {
       const star = new THREE.Mesh(starGeo, starMat);
       starGroup.add(star);
 
-      // Light glow ring
-      const glowGeo = new THREE.RingGeometry(0.4, 0.55, 16);
+      const glowGeo = new THREE.RingGeometry(0.42, 0.6, 16);
       const glowMat = new THREE.MeshBasicMaterial({
         color: '#f1fa8c',
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.45,
       });
       const glow = new THREE.Mesh(glowGeo, glowMat);
       glow.rotation.x = -Math.PI / 2;
@@ -1190,7 +1236,6 @@ export class PortfolioWorld {
   }
 
   private setupParticlePools() {
-    // Tire smoke pool
     const pGeo = new THREE.DodecahedronGeometry(0.12, 0);
     const pMat = new THREE.MeshBasicMaterial({
       color: '#f8f8f2',
@@ -1204,7 +1249,6 @@ export class PortfolioWorld {
       this.smokePool.push(mesh);
     }
 
-    // Impact sparks pool
     const sGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
     const sMat = new THREE.MeshBasicMaterial({ color: '#f1fa8c' });
     for (let i = 0; i < 40; i++) {
@@ -1270,7 +1314,6 @@ export class PortfolioWorld {
   }
 
   private updateParticles(delta: number) {
-    // Update smoke
     for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
       const p = this.smokeParticles[i];
       p.life += delta;
@@ -1290,14 +1333,13 @@ export class PortfolioWorld {
       }
     }
 
-    // Update sparks
     for (let i = this.sparkParticles.length - 1; i >= 0; i--) {
       const s = this.sparkParticles[i];
       s.life += delta;
       s.mesh.position.x += s.vx;
       s.mesh.position.y += s.vy;
       s.mesh.position.z += s.vz;
-      s.vy -= 0.007; // Gravity
+      s.vy -= 0.007;
 
       s.mesh.scale.multiplyScalar(0.92);
 
@@ -1327,8 +1369,7 @@ export class PortfolioWorld {
           cone.isKnocked = true;
           cone.respawnTimer = 0;
 
-          // Car tactile recoil
-          this.speed *= 0.7;
+          this.speed *= 0.72;
           this.carPitchImpulse = 0.15;
           this.carRollImpulse = (Math.random() - 0.5) * 0.15;
           soundFx.playBump();
@@ -1338,7 +1379,7 @@ export class PortfolioWorld {
         cone.group.position.z += cone.vz;
         cone.group.position.y += cone.vy;
 
-        cone.vy -= 0.012; // Gravity
+        cone.vy -= 0.012;
         cone.rotX += cone.rotVx;
         cone.rotZ += cone.rotVz;
         cone.group.rotation.x = cone.rotX;
@@ -1353,7 +1394,6 @@ export class PortfolioWorld {
           cone.rotVz *= 0.85;
         }
 
-        // Auto respawn after 7s
         cone.respawnTimer += delta;
         if (cone.respawnTimer > 7.0) {
           cone.group.position.set(...cone.initialPos);
@@ -1379,7 +1419,7 @@ export class PortfolioWorld {
       star.group.position.y = star.initialPos[1] + Math.sin(time * 3 + star.initialPos[0]) * 0.12;
 
       const dist = Math.hypot(carPos.x - star.group.position.x, carPos.z - star.group.position.z);
-      if (dist < 1.3) {
+      if (dist < 1.35) {
         star.isCollected = true;
         this.collectedStarsCount++;
         soundFx.playCollect();
@@ -1402,21 +1442,18 @@ export class PortfolioWorld {
     });
   }
 
-  // Day / Night Mode Toggle
   public toggleNightMode(): boolean {
     this.isNight = !this.isNight;
 
     if (this.isNight) {
-      // Midnight sky aesthetic
-      gsap.to(this.scene.fog as THREE.FogExp2, { density: 0.026, duration: 1.2 });
+      gsap.to(this.scene.fog as THREE.FogExp2, { density: 0.024, duration: 1.2 });
       gsap.to(this.scene.background as THREE.Color, { r: 0.05, g: 0.06, b: 0.11, duration: 1.2 });
       gsap.to(this.ambientLight, { intensity: 0.22, duration: 1.2 });
       gsap.to(this.hemiLight, { intensity: 0.15, duration: 1.2 });
       gsap.to(this.sunLight, { intensity: 0.2, duration: 1.2 });
 
-      // Sun sinks, Moon rises
-      gsap.to(this.sunGroup.position, { y: -20, duration: 1.2, ease: 'power2.inOut' });
-      gsap.to(this.moonGroup.position, { y: 25, duration: 1.2, ease: 'power2.inOut' });
+      gsap.to(this.sunGroup.position, { y: -22, duration: 1.2, ease: 'power2.inOut' });
+      gsap.to(this.moonGroup.position, { y: 28, duration: 1.2, ease: 'power2.inOut' });
       gsap.to((this.starsPoints.material as THREE.PointsMaterial), { opacity: 0.95, duration: 1.2 });
 
       this.spotLights.forEach((spot) => {
@@ -1430,16 +1467,14 @@ export class PortfolioWorld {
         gsap.to((lamp.mesh.material as THREE.MeshStandardMaterial), { emissiveIntensity: 1.6, duration: 1 });
       });
     } else {
-      // Morning daylight aesthetic
-      gsap.to(this.scene.fog as THREE.FogExp2, { density: 0.016, duration: 1.2 });
+      gsap.to(this.scene.fog as THREE.FogExp2, { density: 0.014, duration: 1.2 });
       gsap.to(this.scene.background as THREE.Color, { r: 0.47, g: 0.73, b: 0.96, duration: 1.2 });
       gsap.to(this.ambientLight, { intensity: 0.95, duration: 1.2 });
       gsap.to(this.hemiLight, { intensity: 0.65, duration: 1.2 });
       gsap.to(this.sunLight, { intensity: 1.85, duration: 1.2 });
 
-      // Sun rises, Moon sinks
-      gsap.to(this.sunGroup.position, { y: 28, duration: 1.2, ease: 'power2.inOut' });
-      gsap.to(this.moonGroup.position, { y: -20, duration: 1.2, ease: 'power2.inOut' });
+      gsap.to(this.sunGroup.position, { y: 32, duration: 1.2, ease: 'power2.inOut' });
+      gsap.to(this.moonGroup.position, { y: -22, duration: 1.2, ease: 'power2.inOut' });
       gsap.to((this.starsPoints.material as THREE.PointsMaterial), { opacity: 0, duration: 1.2 });
 
       this.spotLights.forEach((spot) => {
@@ -1567,33 +1602,17 @@ export class PortfolioWorld {
     this.analogThrottle = 0;
     this.analogSteer = 0;
 
-    const startX = this.carGroup.position.x;
-    const startZ = this.carGroup.position.z;
-    const targetX = cp.parkingPos[0];
-    const targetZ = cp.parkingPos[2];
+    const start = new THREE.Vector3(this.carGroup.position.x, 0, this.carGroup.position.z);
+    const target = new THREE.Vector3(cp.parkingPos[0], 0, cp.parkingPos[2]);
 
-    const roadRadius = 7.5;
-    const startAngle = Math.atan2(startX, startZ);
-    const targetAngle = Math.atan2(targetX, targetZ);
+    // Create a smooth spline navigating across the wide terrain
+    const midX = (start.x + target.x) * 0.5;
+    const midZ = (start.z + target.z) * 0.5 + (Math.abs(start.x - target.x) > 6 ? (target.z > 0 ? 3 : -3) : 0);
+    const mid = new THREE.Vector3(midX, 0, midZ);
 
-    let diff = (targetAngle - startAngle) % (Math.PI * 2);
-    if (diff > Math.PI) diff -= Math.PI * 2;
-    if (diff < -Math.PI) diff += Math.PI * 2;
-
-    const waypoints: THREE.Vector3[] = [];
-    waypoints.push(new THREE.Vector3(startX, 0, startZ));
-
-    const steps = Math.max(3, Math.ceil(Math.abs(diff) / 0.8));
-    for (let i = 1; i < steps; i++) {
-      const frac = i / steps;
-      const angle = startAngle + diff * frac;
-      waypoints.push(new THREE.Vector3(Math.sin(angle) * roadRadius, 0, Math.cos(angle) * roadRadius));
-    }
-    waypoints.push(new THREE.Vector3(targetX, 0, targetZ));
-
-    const curve = new THREE.CatmullRomCurve3(waypoints, false, 'centripetal', 0.5);
+    const curve = new THREE.CatmullRomCurve3([start, mid, target], false, 'centripetal', 0.5);
     const pathLength = curve.getLength();
-    const driveDuration = Math.max(1.6, pathLength * 0.16);
+    const driveDuration = Math.max(1.8, pathLength * 0.14);
 
     const navProgress = { t: 0 };
     this.currentNavTween = gsap.to(navProgress, {
@@ -1665,24 +1684,21 @@ export class PortfolioWorld {
   public honk() {
     soundFx.playHonk();
 
-    // Cartoon squash and stretch
     gsap.timeline()
       .to(this.carChassis.scale, { y: 0.7, x: 1.15, z: 1.15, duration: 0.08, ease: 'power2.out' })
       .to(this.carChassis.scale, { y: 1.25, x: 0.9, z: 0.9, duration: 0.12, ease: 'back.out(2)' })
       .to(this.carChassis.scale, { y: 1.0, x: 1.0, z: 1.0, duration: 0.15, ease: 'power1.out' });
 
-    // Nearby street lamps pulse
     this.streetLamps.forEach((lamp) => {
       const dist = Math.hypot(
         this.carGroup.position.x - lamp.light.position.x,
         this.carGroup.position.z - lamp.light.position.z
       );
-      if (dist < 8.0) {
+      if (dist < 9.0) {
         gsap.to(lamp.light, { intensity: 3.0, duration: 0.15, yoyo: true, repeat: 1 });
       }
     });
 
-    // Shockwave ripple ring
     const shockGeo = new THREE.RingGeometry(0.3, 0.45, 24);
     const shockMat = new THREE.MeshBasicMaterial({
       color: '#f1fa8c',
@@ -1717,6 +1733,76 @@ export class PortfolioWorld {
     return this.collectedStarsCount;
   }
 
+  public setCarPaint(colorHex: string) {
+    if (!this.carBodyMesh) return;
+    soundFx.playPaint();
+    const mat = this.carBodyMesh.material as THREE.MeshStandardMaterial;
+    gsap.to(mat.color, {
+      r: new THREE.Color(colorHex).r,
+      g: new THREE.Color(colorHex).g,
+      b: new THREE.Color(colorHex).b,
+      duration: 0.35,
+      ease: 'power2.out',
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('porto_car_paint', colorHex);
+    }
+  }
+
+  public getCarPaint(): string {
+    if (!this.carBodyMesh) return '#bd93f9';
+    const mat = this.carBodyMesh.material as THREE.MeshStandardMaterial;
+    return '#' + mat.color.getHexString();
+  }
+
+  // Stadium Rounded Rectangle Boundary Detection
+  private checkIslandBoundary(x: number, z: number): { clampedX: number; clampedZ: number; isOut: boolean } {
+    const halfW = this.halfWidth;
+    const halfD = this.halfDepth;
+    const cornerR = this.cornerRadius;
+    const innerW = halfW - cornerR;
+    const innerD = halfD - cornerR;
+
+    const absX = Math.abs(x);
+    const absZ = Math.abs(z);
+
+    // Inside central straight crosses
+    if (absX <= halfW && absZ <= innerD) {
+      return { clampedX: x, clampedZ: z, isOut: false };
+    }
+    if (absX <= innerW && absZ <= halfD) {
+      return { clampedX: x, clampedZ: z, isOut: false };
+    }
+
+    // Inside or outside 4 rounded corner sectors
+    if (absX > innerW && absZ > innerD) {
+      const cx = Math.sign(x) * innerW;
+      const cz = Math.sign(z) * innerD;
+      const dx = x - cx;
+      const dz = z - cz;
+      const dist = Math.hypot(dx, dz);
+      if (dist > cornerR) {
+        const angle = Math.atan2(dz, dx);
+        return {
+          clampedX: cx + Math.cos(angle) * cornerR,
+          clampedZ: cz + Math.sin(angle) * cornerR,
+          isOut: true,
+        };
+      }
+      return { clampedX: x, clampedZ: z, isOut: false };
+    }
+
+    // Outside straight borders
+    if (absX > halfW) {
+      return { clampedX: Math.sign(x) * halfW, clampedZ: z, isOut: true };
+    }
+    if (absZ > halfD) {
+      return { clampedX: x, clampedZ: Math.sign(z) * halfD, isOut: true };
+    }
+
+    return { clampedX: x, clampedZ: z, isOut: false };
+  }
+
   private updateCarPhysics(delta: number) {
     if (this.isCinematic) {
       soundFx.updateEngine(0);
@@ -1727,11 +1813,9 @@ export class PortfolioWorld {
     const isBackward = this.keys.backward || this.analogThrottle < -0.08;
     const throttleRatio = Math.abs(this.analogThrottle) > 0.08 ? Math.abs(this.analogThrottle) : 1.0;
 
-    // Nitro speed multiplier
     this.maxSpeed = this.isNitroActive ? this.baseMaxSpeed * 1.65 : this.baseMaxSpeed;
     const accelRate = this.isNitroActive ? this.acceleration * 1.9 : this.acceleration;
 
-    // Acceleration
     if (isForward) {
       const targetMax = this.maxSpeed * throttleRatio;
       this.speed = Math.min(this.speed + accelRate * throttleRatio, targetMax);
@@ -1743,7 +1827,6 @@ export class PortfolioWorld {
       if (Math.abs(this.speed) < 0.001) this.speed = 0;
     }
 
-    // Steering
     if (Math.abs(this.speed) > 0.005) {
       const dir = this.speed >= 0 ? 1 : -1;
       if (Math.abs(this.analogSteer) > 0.08) {
@@ -1765,9 +1848,9 @@ export class PortfolioWorld {
     this.carGroup.position.z += Math.cos(this.carAngle) * this.speed;
     this.carGroup.rotation.y = this.carAngle;
 
-    // Suspension Jump physics
+    // Suspension Jump
     if (this.carVerticalY > 0 || this.carVerticalVy !== 0) {
-      this.carVerticalVy -= 0.012; // Gravity
+      this.carVerticalVy -= 0.012;
       this.carVerticalY += this.carVerticalVy;
       if (this.carVerticalY <= 0) {
         this.carVerticalY = 0;
@@ -1776,7 +1859,7 @@ export class PortfolioWorld {
     }
     this.carGroup.position.y = this.carVerticalY;
 
-    // Obstacle Collisions & Physical Rebound
+    // Solid Obstacles (fountain, trees) — Note: Checkpoints are NOT in obstacles, completely pass-through!
     const carCollisionRadius = 0.85;
     for (const obs of this.obstacles) {
       const dx = this.carGroup.position.x - obs.x;
@@ -1788,17 +1871,15 @@ export class PortfolioWorld {
         const nx = dx / (dist || 1);
         const nz = dz / (dist || 1);
 
-        // Displace outside obstacle boundary
         this.carGroup.position.x = obs.x + nx * minDist;
         this.carGroup.position.z = obs.z + nz * minDist;
 
-        // Elastic rebound bounce
         const impact = Math.abs(this.speed);
         if (impact > 0.015) {
           this.speed = -this.speed * 0.65;
           this.carPitchImpulse = -0.32 * Math.sign(this.speed || 1);
           this.carRollImpulse = (Math.random() - 0.5) * 0.2;
-          this.carVerticalVy = 0.12; // Hop up
+          this.carVerticalVy = 0.12;
           this.cameraShake = Math.min(0.35, impact * 2.8);
 
           this.emitCollisionSparks(
@@ -1810,15 +1891,14 @@ export class PortfolioWorld {
       }
     }
 
-    // Island outer perimeter boundary clamp & bounce
-    const distFromCenter = Math.hypot(this.carGroup.position.x, this.carGroup.position.z);
-    if (distFromCenter > this.carRadius) {
-      const angle = Math.atan2(this.carGroup.position.x, this.carGroup.position.z);
-      this.carGroup.position.x = Math.sin(angle) * this.carRadius;
-      this.carGroup.position.z = Math.cos(angle) * this.carRadius;
+    // Stadium outer perimeter boundary check
+    const boundaryCheck = this.checkIslandBoundary(this.carGroup.position.x, this.carGroup.position.z);
+    if (boundaryCheck.isOut) {
+      this.carGroup.position.x = boundaryCheck.clampedX;
+      this.carGroup.position.z = boundaryCheck.clampedZ;
 
       const impact = Math.abs(this.speed);
-      this.speed = -this.speed * 0.6; // Bounces back
+      this.speed = -this.speed * 0.6;
       this.carPitchImpulse = -0.28;
       this.carVerticalVy = 0.1;
       this.cameraShake = 0.25;
@@ -1827,36 +1907,40 @@ export class PortfolioWorld {
       soundFx.playBump();
     }
 
-    // Dampen impulse springs
     this.carPitchImpulse *= 0.85;
     this.carRollImpulse *= 0.85;
 
-    // Body roll & pitch
     this.carChassis.rotation.z = -this.steerAngle * 0.4 + this.carRollImpulse;
     this.carChassis.rotation.x = this.speed * 0.15 + this.carPitchImpulse;
 
-    // Rotate wheels
     this.wheels.forEach((wheel) => {
       wheel.rotation.x += this.speed * 4;
     });
 
-    // Particle emissions
-    if (Math.abs(this.speed) > 0.03) {
-      if (Math.random() > 0.25) {
-        this.emitTireSmoke(this.isNitroActive);
+    const isDrifting = Math.abs(this.steerAngle) > 0.022 && Math.abs(this.speed) > 0.06;
+    this.isDriftingState = isDrifting;
+
+    if (Math.abs(this.speed) > 0.03 || isDrifting) {
+      if (isDrifting || Math.random() > 0.25) {
+        this.emitTireSmoke(this.isNitroActive || isDrifting);
+      }
+      if (isDrifting) {
+        const now = this.clock.getElapsedTime();
+        if (now - this.lastDriftSfxTime > 0.32) {
+          soundFx.playDrift();
+          this.lastDriftSfxTime = now;
+        }
       }
     }
 
-    // Audio engine pitch
     soundFx.updateEngine(this.speed / this.maxSpeed);
 
-    // Checkpoint proximity check
     this.checkCheckpointProximity();
   }
 
   private checkCheckpointProximity() {
     let nearest: CheckpointConfig | null = null;
-    let minDistance = 3.2;
+    let minDistance = 3.6;
 
     for (const cp of Object.values(CHECKPOINTS)) {
       const dist = Math.hypot(
@@ -1881,12 +1965,10 @@ export class PortfolioWorld {
       return;
     }
 
-    // Smooth follow camera
     const targetX = this.carGroup.position.x + 8.5;
-    const targetY = 10.5;
-    const targetZ = this.carGroup.position.z + 8.5;
+    const targetY = 11.0;
+    const targetZ = this.carGroup.position.z + 9.0;
 
-    // Camera shake impact damping
     let shakeX = 0;
     let shakeY = 0;
     if (this.cameraShake > 0.005) {
@@ -1897,7 +1979,7 @@ export class PortfolioWorld {
 
     this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, targetX + shakeX, 0.08);
     this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, targetY + shakeY, 0.08);
-    this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetZ, 0.08);
+    this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetZ + shakeY, 0.08);
 
     this.cameraTarget.x = THREE.MathUtils.lerp(this.cameraTarget.x, this.carGroup.position.x, 0.1);
     this.cameraTarget.y = THREE.MathUtils.lerp(this.cameraTarget.y, this.carGroup.position.y + 0.6, 0.1);
@@ -1911,7 +1993,6 @@ export class PortfolioWorld {
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
 
-    // Adaptive performance monitor
     if (delta > 0.035) {
       this.lowFpsCounter++;
       if (this.lowFpsCounter > 120 && !this.isOptimized) {
@@ -1929,32 +2010,30 @@ export class PortfolioWorld {
     this.updateTrafficCones(delta);
     this.updateCollectibles(time);
 
-    // Drifting clouds movement
     this.clouds.forEach((cloud) => {
-      cloud.position.x += delta * 0.65;
-      if (cloud.position.x > 32) cloud.position.x = -32;
+      cloud.position.x += delta * 0.7;
+      if (cloud.position.x > 38) cloud.position.x = -38;
     });
 
-    // Sun rays gentle spin
     if (this.sunGroup) {
       this.sunGroup.rotation.z += delta * 0.2;
     }
 
-    // Animated props (crystals, radar, monuments)
     this.animatedProps.forEach((prop) => prop.update(time));
 
-    // Pulse checkpoint glow rings
     this.rings.forEach((ring, i) => {
       ring.scale.setScalar(1 + Math.sin(time * 3 + i) * 0.08);
     });
 
-    // Notify minimap
     if (this.onCarUpdate) {
       this.onCarUpdate(
         this.carGroup.position.x,
         this.carGroup.position.z,
         this.carAngle,
-        this.speed
+        this.speed,
+        this.maxSpeed,
+        this.isDriftingState,
+        this.isNitroActive
       );
     }
 

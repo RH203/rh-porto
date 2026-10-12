@@ -68,6 +68,30 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
         📯
       </button>
 
+      {/* Car Paint Palette Toggle */}
+      <div class="relative">
+        <button
+          id="btn-paint-toggle"
+          type="button"
+          title="Kustomisasi Warna Mobil"
+          class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
+          aria-label="Warna Mobil"
+        >
+          🎨
+        </button>
+        {/* Paint Swatches Popover */}
+        <div
+          id="paint-palette-menu"
+          class="hidden absolute top-11 left-0 bg-[#282a36]/95 border border-[#44475a] p-1.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-1.5 z-50 pointer-events-auto"
+        >
+          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#bd93f9] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#bd93f9" title="Cyber Violet"></button>
+          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#50fa7b] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#50fa7b" title="Neon Emerald"></button>
+          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#ffb86c] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#ffb86c" title="Sunset Amber"></button>
+          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#8be9fd] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#8be9fd" title="Electric Cyan"></button>
+          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#ff79c6] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#ff79c6" title="Hot Pink"></button>
+        </div>
+      </div>
+
       {/* Star Collectibles Counter Badge */}
       <div
         id="star-counter-badge"
@@ -90,6 +114,44 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
       </a>
     </div>
   </header>
+
+  <!-- Racing Speedometer HUD (Telemetry Cockpit) -->
+  <div
+    id="speedometer-hud"
+    class="fixed bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none select-none hidden sm:flex items-center gap-3 bg-[#282a36]/90 border border-[#44475a] px-3.5 py-1.5 rounded-2xl shadow-2xl backdrop-blur-md"
+  >
+    {/* Gear Indicator */}
+    <div class="flex flex-col items-center">
+      <span class="text-[9px] font-mono text-[#6272a4] uppercase">GEAR</span>
+      <span id="telemetry-gear" class="text-sm font-black text-[#50fa7b] font-mono leading-none">1</span>
+    </div>
+
+    <div class="h-6 w-[1px] bg-[#44475a]"></div>
+
+    {/* Speed Gauge */}
+    <div class="flex items-baseline gap-1">
+      <span id="telemetry-speed" class="text-xl font-black font-mono text-[#f8f8f2] tracking-tight leading-none">0</span>
+      <span class="text-[10px] font-mono font-bold text-[#8be9fd]">KM/H</span>
+    </div>
+
+    <div class="h-6 w-[1px] bg-[#44475a]"></div>
+
+    {/* Status Badges: Drift & Nitro */}
+    <div class="flex items-center gap-1">
+      <span
+        id="telemetry-drift"
+        class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/40 opacity-0 transition-opacity"
+      >
+        DRIFT
+      </span>
+      <span
+        id="telemetry-nitro"
+        class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/40 opacity-0 transition-opacity"
+      >
+        NITRO
+      </span>
+    </div>
+  </div>
 
   <!-- Top Right HUD: Driving Hints -->
   <aside class="fixed top-4 right-4 z-20 pointer-events-none select-none hidden md:block">
