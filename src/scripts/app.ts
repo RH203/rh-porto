@@ -32,6 +32,9 @@ function initPortfolioApp() {
   const btnHorn = document.getElementById('btn-horn');
   const ctrlHorn = document.getElementById('ctrl-horn');
   const ctrlLight = document.getElementById('ctrl-light');
+  const ctrlJump = document.getElementById('ctrl-jump');
+  const ctrlNitro = document.getElementById('ctrl-nitro');
+  const starCounterText = document.getElementById('star-counter-text');
   const minimapCar = document.getElementById('minimap-car');
   const minimapNodes = document.querySelectorAll('.minimap-cp-btn');
   const toastBox = document.getElementById('toast-box');
@@ -137,7 +140,7 @@ function initPortfolioApp() {
 
   // Welcome modal handlers
   function closeWelcomeModal() {
-    if (!isWelcomeOpen || !welcomeBackdrop || !welcomeCard) return;
+    if (!welcomeBackdrop || !welcomeCard) return;
     isWelcomeOpen = false;
 
     welcomeBackdrop.classList.remove('opacity-100');
@@ -148,8 +151,9 @@ function initPortfolioApp() {
     setTimeout(() => {
       if (!isWelcomeOpen) {
         welcomeBackdrop.classList.add('hidden');
+        welcomeBackdrop.style.display = 'none';
       }
-    }, 300);
+    }, 280);
 
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -160,6 +164,7 @@ function initPortfolioApp() {
   function openWelcomeModal() {
     if (!welcomeBackdrop || !welcomeCard) return;
     isWelcomeOpen = true;
+    welcomeBackdrop.style.display = '';
     welcomeBackdrop.classList.remove('hidden');
     void welcomeBackdrop.offsetWidth;
     welcomeBackdrop.classList.remove('opacity-0', 'pointer-events-none');
@@ -238,6 +243,13 @@ function initPortfolioApp() {
         showToast(`⭐ Bintang ${collected}/${total} Dikoleksi!`, '⭐');
       }
     },
+    onNightModeChange: (isNight) => {
+      if (btnNightMode) {
+        btnNightMode.textContent = isNight ? '🌙' : '☀️';
+        btnNightMode.title = isNight ? 'Beralih ke Mode Pagi' : 'Beralih ke Mode Malam';
+      }
+      showToast(isNight ? 'Mode Malam Aktif 🌙' : 'Mode Pagi Cerah Aktif ☀️', isNight ? '🌙' : '☀️');
+    },
   });
 
   // Horn button handlers
@@ -252,12 +264,7 @@ function initPortfolioApp() {
   // Night / Day mode toggle
   const handleNightToggle = () => {
     soundFx.init();
-    const isNight = world.toggleNightMode();
-    if (btnNightMode) {
-      btnNightMode.textContent = isNight ? '🌙' : '☀️';
-      btnNightMode.title = isNight ? 'Beralih ke Mode Pagi' : 'Beralih ke Mode Malam';
-    }
-    showToast(isNight ? 'Mode Malam Aktif 🌙' : 'Mode Pagi Cerah Aktif ☀️', isNight ? '🌙' : '☀️');
+    world.toggleNightMode();
   };
   if (btnNightMode) btnNightMode.addEventListener('click', handleNightToggle);
   if (ctrlLight) ctrlLight.addEventListener('click', handleNightToggle);
@@ -608,42 +615,44 @@ function initPortfolioApp() {
 
     // Accelerator Gas Pedal
     if (ctrlGasPedal) {
-      const startGas = (e: Event) => {
+      const startGas = (e: PointerEvent) => {
         e.preventDefault();
         gasActive = true;
+        try { ctrlGasPedal.setPointerCapture(e.pointerId); } catch {}
         ctrlGasPedal.classList.add('scale-95', 'brightness-125');
         updatePedalThrottle();
       };
-      const stopGas = (e: Event) => {
+      const stopGas = (e: PointerEvent) => {
         e.preventDefault();
         gasActive = false;
+        try { ctrlGasPedal.releasePointerCapture(e.pointerId); } catch {}
         ctrlGasPedal.classList.remove('scale-95', 'brightness-125');
         updatePedalThrottle();
       };
-      ctrlGasPedal.addEventListener('pointerdown', startGas);
-      ctrlGasPedal.addEventListener('pointerup', stopGas);
-      ctrlGasPedal.addEventListener('pointercancel', stopGas);
-      ctrlGasPedal.addEventListener('pointerleave', stopGas);
+      ctrlGasPedal.addEventListener('pointerdown', startGas as EventListener);
+      ctrlGasPedal.addEventListener('pointerup', stopGas as EventListener);
+      ctrlGasPedal.addEventListener('pointercancel', stopGas as EventListener);
     }
 
     // Brake / Reverse Pedal
     if (ctrlBrakePedal) {
-      const startBrake = (e: Event) => {
+      const startBrake = (e: PointerEvent) => {
         e.preventDefault();
         brakeActive = true;
+        try { ctrlBrakePedal.setPointerCapture(e.pointerId); } catch {}
         ctrlBrakePedal.classList.add('scale-95', 'brightness-125');
         updatePedalThrottle();
       };
-      const stopBrake = (e: Event) => {
+      const stopBrake = (e: PointerEvent) => {
         e.preventDefault();
         brakeActive = false;
+        try { ctrlBrakePedal.releasePointerCapture(e.pointerId); } catch {}
         ctrlBrakePedal.classList.remove('scale-95', 'brightness-125');
         updatePedalThrottle();
       };
-      ctrlBrakePedal.addEventListener('pointerdown', startBrake);
-      ctrlBrakePedal.addEventListener('pointerup', stopBrake);
-      ctrlBrakePedal.addEventListener('pointercancel', stopBrake);
-      ctrlBrakePedal.addEventListener('pointerleave', stopBrake);
+      ctrlBrakePedal.addEventListener('pointerdown', startBrake as EventListener);
+      ctrlBrakePedal.addEventListener('pointerup', stopBrake as EventListener);
+      ctrlBrakePedal.addEventListener('pointercancel', stopBrake as EventListener);
     }
   }
 

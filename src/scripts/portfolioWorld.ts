@@ -200,6 +200,7 @@ export class PortfolioWorld {
     isNitro: boolean
   ) => void;
   private onStarCollected?: (collected: number, total: number) => void;
+  private onNightModeChange?: (isNight: boolean) => void;
 
   constructor(
     container: HTMLElement,
@@ -216,6 +217,7 @@ export class PortfolioWorld {
         isNitro: boolean
       ) => void;
       onStarCollected?: (collected: number, total: number) => void;
+      onNightModeChange?: (isNight: boolean) => void;
     }
   ) {
     this.container = container;
@@ -223,6 +225,7 @@ export class PortfolioWorld {
     this.onSelectCheckpoint = callbacks.onSelectCheckpoint;
     this.onCarUpdate = callbacks.onCarUpdate;
     this.onStarCollected = callbacks.onStarCollected;
+    this.onNightModeChange = callbacks.onNightModeChange;
     this.clock = new THREE.Clock();
 
     // Scene with morning sky
@@ -1489,6 +1492,10 @@ export class PortfolioWorld {
       });
     }
 
+    if (this.onNightModeChange) {
+      this.onNightModeChange(this.isNight);
+    }
+
     return this.isNight;
   }
 
@@ -1876,8 +1883,9 @@ export class PortfolioWorld {
 
         const impact = Math.abs(this.speed);
         if (impact > 0.015) {
+          const preImpactSign = Math.sign(this.speed || 1);
           this.speed = -this.speed * 0.65;
-          this.carPitchImpulse = -0.32 * Math.sign(this.speed || 1);
+          this.carPitchImpulse = -0.32 * preImpactSign;
           this.carRollImpulse = (Math.random() - 0.5) * 0.2;
           this.carVerticalVy = 0.12;
           this.cameraShake = Math.min(0.35, impact * 2.8);
@@ -1898,13 +1906,17 @@ export class PortfolioWorld {
       this.carGroup.position.z = boundaryCheck.clampedZ;
 
       const impact = Math.abs(this.speed);
-      this.speed = -this.speed * 0.6;
-      this.carPitchImpulse = -0.28;
-      this.carVerticalVy = 0.1;
-      this.cameraShake = 0.25;
+      if (impact > 0.018) {
+        this.speed = -this.speed * 0.6;
+        this.carPitchImpulse = -0.28;
+        this.carVerticalVy = 0.1;
+        this.cameraShake = Math.min(0.35, impact * 2.5);
 
-      this.emitCollisionSparks(this.carGroup.position.x, this.carGroup.position.z);
-      soundFx.playBump();
+        this.emitCollisionSparks(this.carGroup.position.x, this.carGroup.position.z);
+        soundFx.playBump();
+      } else {
+        this.speed = 0;
+      }
     }
 
     this.carPitchImpulse *= 0.85;
