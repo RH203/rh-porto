@@ -179,6 +179,76 @@ class SoundManager {
     osc.stop(t + 0.16);
   }
 
+  public playBoost() {
+    if (!this.ctx || this.isMutedState) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(420, t + 0.28);
+
+    gain.gain.setValueAtTime(0.08, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.33);
+  }
+
+  public playHop() {
+    if (!this.ctx || this.isMutedState) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(260, t);
+    osc.frequency.exponentialRampToValueAtTime(520, t + 0.14);
+
+    gain.gain.setValueAtTime(0.09, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.17);
+  }
+
+  public playCollect() {
+    if (!this.ctx || this.isMutedState) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const tones = [523.25, 659.25, 783.99, 1046.5];
+    const t = this.ctx.currentTime;
+
+    tones.forEach((freq, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      const noteTime = t + idx * 0.055;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, noteTime);
+
+      gain.gain.setValueAtTime(0.08, noteTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx!.destination);
+
+      osc.start(noteTime);
+      osc.stop(noteTime + 0.28);
+    });
+  }
+
   public playClick() {
     if (!this.ctx || this.isMutedState) return;
     if (this.ctx.state === 'suspended') this.ctx.resume();

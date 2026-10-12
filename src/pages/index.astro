@@ -39,11 +39,11 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
       <button
         id="btn-night-mode"
         type="button"
-        title="Toggle Mode Malam (Tombol L)"
+        title="Beralih ke Mode Malam (Tombol L)"
         class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#bd93f9] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
-        aria-label="Toggle Mode Malam"
+        aria-label="Toggle Mode Siang / Malam"
       >
-        🌙
+        ☀️
       </button>
 
       {/* Audio Sound FX toggle */}
@@ -68,6 +68,16 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
         📯
       </button>
 
+      {/* Star Collectibles Counter Badge */}
+      <div
+        id="star-counter-badge"
+        class="flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-[#282a36] border border-[#f1fa8c]/40 text-[#f1fa8c] text-xs font-bold shadow"
+        title="Kumpulkan 5 Bintang di Sirkuit Pulau"
+      >
+        <span>⭐</span>
+        <span id="star-counter-text">0 / 5</span>
+      </div>
+
       {/* Download Resume / CV Link */}
       <a
         id="btn-download-cv"
@@ -83,9 +93,17 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
 
   <!-- Top Right HUD: Driving Hints -->
   <aside class="fixed top-4 right-4 z-20 pointer-events-none select-none hidden md:block">
-    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3.5 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs text-[11px] text-[#f8f8f2] flex items-center gap-3">
+    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3.5 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs text-[11px] text-[#f8f8f2] flex items-center gap-2.5">
       <div>
         <span class="text-[#8be9fd] font-mono font-bold">WASD</span> Setir
+      </div>
+      <span class="text-[#44475a]">|</span>
+      <div>
+        <span class="text-[#50fa7b] font-mono font-bold">Shift</span> Nitro
+      </div>
+      <span class="text-[#44475a]">|</span>
+      <div>
+        <span class="text-[#ff79c6] font-mono font-bold">Space/J</span> Lompat
       </div>
       <span class="text-[#44475a]">|</span>
       <div>
@@ -93,11 +111,7 @@ const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact
       </div>
       <span class="text-[#44475a]">|</span>
       <div>
-        <span class="text-[#ffb86c] font-mono font-bold">L</span> Mode Malam
-      </div>
-      <span class="text-[#44475a]">|</span>
-      <div>
-        <span class="text-[#50fa7b] font-mono font-bold">Space</span> Buka
+        <span class="text-[#ffb86c] font-mono font-bold">L</span> Malam
       </div>
     </div>
   </aside>

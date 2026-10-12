@@ -89,9 +89,27 @@
     </div>
   </div>
 
-  {/* Right Controls: Action, Horn & Lights */}
+  {/* Right Controls: Action, Horn, Lights, Jump, Boost */}
   <div class="pointer-events-auto flex flex-col items-end gap-2.5">
     <div class="flex items-center gap-2">
+      <button
+        id="ctrl-jump"
+        type="button"
+        class="w-12 h-12 rounded-2xl bg-[#343746]/90 border border-[#44475a] active:bg-[#ff79c6] text-[#f8f8f2] active:text-[#282a36] shadow-xl flex items-center justify-center text-lg active:scale-95 transition-transform"
+        title="Lompat"
+        aria-label="Lompat Mobil"
+      >
+        🦘
+      </button>
+      <button
+        id="ctrl-nitro"
+        type="button"
+        class="w-12 h-12 rounded-2xl bg-[#343746]/90 border border-[#44475a] active:bg-[#50fa7b] text-[#f8f8f2] active:text-[#282a36] shadow-xl flex items-center justify-center text-lg active:scale-95 transition-transform"
+        title="Nitro Boost"
+        aria-label="Nitro Boost"
+      >
+        ⚡
+      </button>
       <button
         id="ctrl-horn"
         type="button"

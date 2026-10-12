@@ -168,6 +168,10 @@ function initPortfolioApp() {
     welcomeCard.classList.add('scale-100');
   }
 
+  const starCounterText = document.getElementById('star-counter-text');
+  const ctrlNitro = document.getElementById('ctrl-nitro');
+  const ctrlJump = document.getElementById('ctrl-jump');
+
   // 3D World Instantiation
   const world = new PortfolioWorld(container, {
     onNearCheckpoint: (cp) => {
@@ -187,11 +191,19 @@ function initPortfolioApp() {
       openModal(cp.key, cp.label, cp.shortDesc);
     },
     onCarUpdate: (x, z, angle) => {
-      // Real-time update Minimap radar pointer
       if (minimapCar) {
-        // Coordinate mapping: Three.js (x, z) to SVG coordinates
         const deg = (angle * 180) / Math.PI;
         minimapCar.setAttribute('transform', `translate(${x.toFixed(2)}, ${z.toFixed(2)}) rotate(${(-deg).toFixed(1)})`);
+      }
+    },
+    onStarCollected: (collected, total) => {
+      if (starCounterText) {
+        starCounterText.textContent = `${collected} / ${total}`;
+      }
+      if (collected >= total) {
+        showToast('🏆 Keren! Semua 5 Bintang Berhasil Dikumpulkan!', '⭐');
+      } else {
+        showToast(`⭐ Bintang ${collected}/${total} Dikoleksi!`, '⭐');
       }
     },
   });
@@ -205,18 +217,43 @@ function initPortfolioApp() {
   if (btnHorn) btnHorn.addEventListener('click', handleHorn);
   if (ctrlHorn) ctrlHorn.addEventListener('click', handleHorn);
 
-  // Night mode handlers
+  // Night / Day mode toggle
   const handleNightToggle = () => {
     soundFx.init();
     const isNight = world.toggleNightMode();
     if (btnNightMode) {
-      btnNightMode.textContent = isNight ? '☀️' : '🌙';
-      btnNightMode.title = isNight ? 'Beralih ke Mode Siang' : 'Beralih ke Mode Malam';
+      btnNightMode.textContent = isNight ? '🌙' : '☀️';
+      btnNightMode.title = isNight ? 'Beralih ke Mode Pagi' : 'Beralih ke Mode Malam';
     }
-    showToast(isNight ? 'Mode Malam Aktif 🌙' : 'Mode Siang Aktif ☀️', isNight ? '🌙' : '☀️');
+    showToast(isNight ? 'Mode Malam Aktif 🌙' : 'Mode Pagi Cerah Aktif ☀️', isNight ? '🌙' : '☀️');
   };
   if (btnNightMode) btnNightMode.addEventListener('click', handleNightToggle);
   if (ctrlLight) ctrlLight.addEventListener('click', handleNightToggle);
+
+  // Jump and Nitro mobile controls
+  if (ctrlJump) {
+    ctrlJump.addEventListener('click', () => {
+      soundFx.init();
+      world.jump();
+    });
+  }
+  if (ctrlNitro) {
+    const startNitro = (e: Event) => {
+      e.preventDefault();
+      soundFx.init();
+      world.setNitro(true);
+    };
+    const stopNitro = (e: Event) => {
+      e.preventDefault();
+      world.setNitro(false);
+    };
+    ctrlNitro.addEventListener('touchstart', startNitro, { passive: false });
+    ctrlNitro.addEventListener('touchend', stopNitro, { passive: false });
+    ctrlNitro.addEventListener('touchcancel', stopNitro, { passive: false });
+    ctrlNitro.addEventListener('mousedown', startNitro);
+    ctrlNitro.addEventListener('mouseup', stopNitro);
+    ctrlNitro.addEventListener('mouseleave', stopNitro);
+  }
 
   // Minimap checkpoint click navigation
   minimapNodes.forEach((node) => {
