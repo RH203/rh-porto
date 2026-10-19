@@ -1,200 +1,339 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import RecruiterDock from '../components/RecruiterDock.astro';
-import MobileControls from '../components/MobileControls.astro';
-import ProximityBadge from '../components/ProximityBadge.astro';
-import InfoModal from '../components/InfoModal.astro';
-import WelcomeModal from '../components/WelcomeModal.astro';
-import Minimap from '../components/Minimap.astro';
-import { portfolioData } from '../data/portfolioData';
+import data from '../data/portfolio.json';
 
-const pageTitle = `${portfolioData.contact.name} - 3D Interactive Portfolio`;
-const pageDescription = `${portfolioData.contact.name} - ${portfolioData.contact.role}. Interactive 3D Toy Car Diorama Portfolio.`;
+const { profile, projects, experience, skills, education, certifications, languages } = data;
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
-  <!-- 3D Canvas Viewport -->
-  <main id="canvas-container" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></main>
+<Layout title={`${profile.name} — Software Engineer`} description={profile.summary}>
+  <div class="max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-20 text-[15px] leading-relaxed text-[#141413] dark:text-[#ededeb]">
 
-  <!-- Top Left HUD: Profile Identity & Quick Toolbars -->
-  <header class="fixed top-4 left-4 z-20 pointer-events-none select-none flex flex-wrap items-center gap-2">
-    <!-- Profile Card -->
-    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3.5 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-[#bd93f9] text-[#282a36] font-black flex items-center justify-center text-sm shadow">
-        RF
-      </div>
-      <div>
-        <h1 class="text-xs sm:text-sm font-bold tracking-tight text-[#f8f8f2] leading-tight">
-          {portfolioData.contact.name}
-        </h1>
-        <p class="text-[10px] sm:text-[11px] font-medium text-[#50fa7b] leading-tight">
-          {portfolioData.contact.role}
-        </p>
-      </div>
-    </div>
+    <!-- Header Section: Personal, Direct, Human -->
+    <header class="mb-14 pb-8 border-b border-[#e5e4de] dark:border-[#24252a]">
+      <div class="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413] dark:text-[#ededeb]">
+            {profile.name}
+          </h1>
+          <p class="text-sm sm:text-base text-[#6b6a67] dark:text-[#9c9b98] mt-1 font-medium">
+            {profile.role}
+          </p>
+        </div>
 
-    <!-- Quick Action Toolbar -->
-    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] p-1.5 rounded-2xl shadow-xl backdrop-blur-xs flex items-center gap-1">
-      {/* Night mode toggle */}
-      <button
-        id="btn-night-mode"
-        type="button"
-        title="Beralih ke Mode Malam (Tombol L)"
-        class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#bd93f9] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
-        aria-label="Toggle Mode Siang / Malam"
-      >
-        ☀️
-      </button>
-
-      {/* Audio Sound FX toggle */}
-      <button
-        id="btn-sound-toggle"
-        type="button"
-        title="Toggle Suara SFX Mesin & Klakson"
-        class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#50fa7b] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
-        aria-label="Toggle Suara"
-      >
-        🔊
-      </button>
-
-      {/* Klakson Honk */}
-      <button
-        id="btn-horn"
-        type="button"
-        title="Bunyikan Klakson (Tombol H)"
-        class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#f1fa8c] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
-        aria-label="Bunyikan Klakson"
-      >
-        📯
-      </button>
-
-      {/* Car Paint Palette Toggle */}
-      <div class="relative">
+        <!-- Subtle Theme Toggle -->
         <button
-          id="btn-paint-toggle"
           type="button"
-          title="Kustomisasi Warna Mobil"
-          class="w-9 h-9 rounded-xl bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] text-[#f8f8f2] text-sm flex items-center justify-center border border-[#44475a] transition-all"
-          aria-label="Warna Mobil"
+          id="btn-theme-toggle"
+          class="text-xs font-mono px-2.5 py-1 rounded border border-[#e5e4de] dark:border-[#24252a] text-[#6b6a67] dark:text-[#9c9b98] hover:text-[#141413] dark:hover:text-[#ededeb] hover:bg-[#f3f2ee] dark:hover:bg-[#18191e] transition-colors cursor-pointer"
+          aria-label="Ganti mode tampilan"
         >
-          🎨
+          <span class="dark:hidden">Dark mode</span>
+          <span class="hidden dark:inline">Light mode</span>
         </button>
-        {/* Paint Swatches Popover */}
-        <div
-          id="paint-palette-menu"
-          class="hidden absolute top-11 left-0 bg-[#282a36]/95 border border-[#44475a] p-1.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-1.5 z-50 pointer-events-auto"
+      </div>
+
+      <!-- Human Summary Bio -->
+      <p class="text-[#3c3b37] dark:text-[#c4c3be] mt-4 leading-relaxed">
+        {profile.summary}
+      </p>
+
+      <!-- Simple Text Meta & Contact Links -->
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 text-xs text-[#6b6a67] dark:text-[#9c9b98] font-mono">
+        <span>Surabaya, Indonesia</span>
+        <span class="text-[#d4d3cc] dark:text-[#383a42]">/</span>
+        <a
+          href={`mailto:${profile.email}`}
+          class="text-[#141413] dark:text-[#ededeb] hover:underline underline-offset-4"
         >
-          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#bd93f9] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#bd93f9" title="Cyber Violet"></button>
-          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#50fa7b] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#50fa7b" title="Neon Emerald"></button>
-          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#ffb86c] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#ffb86c" title="Sunset Amber"></button>
-          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#8be9fd] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#8be9fd" title="Electric Cyan"></button>
-          <button type="button" class="paint-swatch w-6 h-6 rounded-lg bg-[#ff79c6] border border-[#f8f8f2]/40 hover:scale-110 transition-transform" data-color="#ff79c6" title="Hot Pink"></button>
+          {profile.email}
+        </a>
+        <button
+          type="button"
+          id="btn-copy-email"
+          data-email={profile.email}
+          class="text-[#6b6a67] dark:text-[#9c9b98] hover:text-[#141413] dark:hover:text-[#ededeb] cursor-pointer"
+        >
+          (salin)
+        </button>
+        <span class="text-[#d4d3cc] dark:text-[#383a42]">/</span>
+        <a
+          href={profile.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[#141413] dark:text-[#ededeb] hover:underline underline-offset-4"
+        >
+          GitHub
+        </a>
+        <span class="text-[#d4d3cc] dark:text-[#383a42]">/</span>
+        <a
+          href={profile.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[#141413] dark:text-[#ededeb] hover:underline underline-offset-4"
+        >
+          LinkedIn
+        </a>
+      </div>
+    </header>
+
+    <!-- Navigation Jump Bar (Quiet & Textual) -->
+    <nav class="flex items-center gap-5 text-xs font-mono uppercase tracking-wider text-[#6b6a67] dark:text-[#9c9b98] mb-12" aria-label="Daftar Bagian">
+      <a href="#proyek" class="hover:text-[#141413] dark:hover:text-[#ededeb] transition-colors">01. Proyek</a>
+      <a href="#pengalaman" class="hover:text-[#141413] dark:hover:text-[#ededeb] transition-colors">02. Pengalaman</a>
+      <a href="#keahlian" class="hover:text-[#141413] dark:hover:text-[#ededeb] transition-colors">03. Stack</a>
+      <a href="#kredensial" class="hover:text-[#141413] dark:hover:text-[#ededeb] transition-colors">04. Kredensial</a>
+    </nav>
+
+    <!-- SECTION 1: SELECTED PROJECTS -->
+    <section id="proyek" class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-[#e5e4de] dark:border-[#24252a]">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-[#6b6a67] dark:text-[#9c9b98]">
+          01 / Proyek Rekayasa Terpilih
+        </h2>
+        <span class="text-xs font-mono text-[#999893] dark:text-[#6e6d6a]">{projects.length} Sistem</span>
+      </div>
+
+      <div class="space-y-12">
+        {projects.map((proj, idx) => (
+          <article class="space-y-3.5">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="text-lg font-bold tracking-tight text-[#141413] dark:text-[#ededeb]">
+                {proj.title}
+              </h3>
+              <span class="text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98]">{proj.period}</span>
+            </div>
+
+            <p class="text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98]">
+              {proj.role} — {proj.subtitle}
+            </p>
+
+            <p class="text-[#3c3b37] dark:text-[#c4c3be]">
+              {proj.description}
+            </p>
+
+            <!-- Technical Challenge & Solution Note -->
+            <div class="pl-3.5 border-l-2 border-[#e5e4de] dark:border-[#24252a] text-xs space-y-1.5 text-[#555450] dark:text-[#a8a7a2]">
+              <p><strong class="font-semibold text-[#141413] dark:text-[#ededeb]">Tantangan:</strong> {proj.challenge}</p>
+              <p><strong class="font-semibold text-[#141413] dark:text-[#ededeb]">Solusi Arsitektur:</strong> {proj.solution}</p>
+            </div>
+
+            <!-- Real Implementation Highlights -->
+            <ul class="space-y-1.5 text-xs text-[#3c3b37] dark:text-[#c4c3be] pt-1">
+              {proj.highlights.map((h) => (
+                <li class="flex items-start gap-2">
+                  <span class="text-[#999893] dark:text-[#6e6d6a] select-none">-</span>
+                  <span>{h}</span>
+                </li>
+              ))}
+            </ul>
+
+            <!-- Tech Stack Tags & Repo Link -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div class="flex flex-wrap gap-1.5">
+                {proj.tags.map((t) => (
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#f3f2ee] dark:bg-[#18191e] text-[#555450] dark:text-[#a8a7a2] border border-[#e5e4de] dark:border-[#24252a]">
+                    {t}
+                  </span>
+                ))}
+              </div>
+
+              {proj.githubUrl && (
+                <a
+                  href={proj.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs font-mono text-[#141413] dark:text-[#ededeb] hover:underline underline-offset-4 flex items-center gap-1"
+                >
+                  <span>Repository</span>
+                  <span class="text-[10px]">↗</span>
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- SECTION 2: WORK EXPERIENCE -->
+    <section id="pengalaman" class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-[#e5e4de] dark:border-[#24252a]">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-[#6b6a67] dark:text-[#9c9b98]">
+          02 / Pengalaman Kerja
+        </h2>
+        <span class="text-xs font-mono text-[#999893] dark:text-[#6e6d6a]">{experience.length} Posisi</span>
+      </div>
+
+      <div class="space-y-10">
+        {experience.map((exp) => (
+          <article class="space-y-2.5">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 class="text-base font-bold text-[#141413] dark:text-[#ededeb]">
+                {exp.role} <span class="font-normal text-[#6b6a67] dark:text-[#9c9b98]">di</span> {exp.company}
+              </h3>
+              <span class="text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98]">{exp.period}</span>
+            </div>
+
+            <p class="text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98]">
+              {exp.location}
+            </p>
+
+            <p class="text-xs text-[#555450] dark:text-[#a8a7a2]">
+              {exp.summary}
+            </p>
+
+            <ul class="space-y-1.5 text-xs text-[#3c3b37] dark:text-[#c4c3be] pt-1">
+              {exp.bullets.map((b) => (
+                <li class="flex items-start gap-2">
+                  <span class="text-[#999893] dark:text-[#6e6d6a] select-none">-</span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              {exp.techStack.map((t) => (
+                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#f3f2ee] dark:bg-[#18191e] text-[#555450] dark:text-[#a8a7a2] border border-[#e5e4de] dark:border-[#24252a]">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- SECTION 3: TECHNICAL SKILLS & STACK -->
+    <section id="keahlian" class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-[#e5e4de] dark:border-[#24252a]">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-[#6b6a67] dark:text-[#9c9b98]">
+          03 / Instrumen & Keahlian Teknis
+        </h2>
+        <span class="text-xs font-mono text-[#999893] dark:text-[#6e6d6a]">Index Stack</span>
+      </div>
+
+      <div class="space-y-6">
+        {skills.map((cat) => (
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pb-4 border-b border-[#e5e4de]/60 dark:border-[#24252a]/60">
+            <div>
+              <h3 class="text-xs font-bold text-[#141413] dark:text-[#ededeb]">{cat.category}</h3>
+              <p class="text-[11px] text-[#6b6a67] dark:text-[#9c9b98] mt-0.5">{cat.description}</p>
+            </div>
+            <div class="sm:col-span-2 flex flex-wrap gap-1.5 items-center">
+              {cat.items.map((item) => (
+                <span class="text-xs font-mono px-2 py-0.5 rounded bg-[#f3f2ee] dark:bg-[#18191e] text-[#3c3b37] dark:text-[#c4c3be] border border-[#e5e4de] dark:border-[#24252a]">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- SECTION 4: EDUCATION & CREDENTIALS -->
+    <section id="kredensial" class="mb-16">
+      <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-[#e5e4de] dark:border-[#24252a]">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-[#6b6a67] dark:text-[#9c9b98]">
+          04 / Pendidikan & Kredensial
+        </h2>
+        <span class="text-xs font-mono text-[#999893] dark:text-[#6e6d6a]">Latar Belakang</span>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Education -->
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 class="text-sm font-bold text-[#141413] dark:text-[#ededeb]">
+              {education[0].institution}
+            </h3>
+            <span class="text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98]">{education[0].period}</span>
+          </div>
+          <p class="text-xs text-[#3c3b37] dark:text-[#c4c3be]">
+            {education[0].degree} — IPK: <span class="font-bold text-[#141413] dark:text-[#ededeb]">{education[0].gpa}</span>
+          </p>
+          <p class="text-[11px] text-[#6b6a67] dark:text-[#9c9b98]">{education[0].notes}</p>
+        </div>
+
+        <!-- Certifications -->
+        <div class="pt-4 border-t border-[#e5e4de]/60 dark:border-[#24252a]/60 space-y-2.5">
+          <h3 class="text-xs font-mono uppercase text-[#6b6a67] dark:text-[#9c9b98]">Sertifikasi</h3>
+          <ul class="space-y-2 text-xs text-[#3c3b37] dark:text-[#c4c3be]">
+            {certifications.map((c) => (
+              <li class="flex items-baseline justify-between gap-3">
+                <span>{c.name} ({c.issuer})</span>
+                <span class="text-xs font-mono text-[#999893] dark:text-[#6e6d6a] shrink-0">{c.year}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Languages -->
+        <div class="pt-4 border-t border-[#e5e4de]/60 dark:border-[#24252a]/60 space-y-2">
+          <h3 class="text-xs font-mono uppercase text-[#6b6a67] dark:text-[#9c9b98]">Bahasa</h3>
+          <div class="flex flex-wrap gap-4 text-xs text-[#3c3b37] dark:text-[#c4c3be]">
+            {languages.map((l) => (
+              <span>
+                <strong class="font-semibold text-[#141413] dark:text-[#ededeb]">{l.language}:</strong> {l.proficiency}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
+    </section>
 
-      {/* Star Collectibles Counter Badge */}
-      <div
-        id="star-counter-badge"
-        class="flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-[#282a36] border border-[#f1fa8c]/40 text-[#f1fa8c] text-xs font-bold shadow"
-        title="Kumpulkan 5 Bintang di Sirkuit Pulau"
-      >
-        <span>⭐</span>
-        <span id="star-counter-text">0 / 5</span>
+    <!-- Minimalist Quiet Footer -->
+    <footer class="pt-8 border-t border-[#e5e4de] dark:border-[#24252a] text-xs font-mono text-[#6b6a67] dark:text-[#9c9b98] flex flex-wrap items-center justify-between gap-3">
+      <span>{profile.name} · Surabaya, Indonesia</span>
+      <div class="flex items-center gap-3">
+        <a href={`mailto:${profile.email}`} class="hover:text-[#141413] dark:hover:text-[#ededeb]">Hubungi</a>
+        <span>·</span>
+        <a href="#proyek" class="hover:text-[#141413] dark:hover:text-[#ededeb]">Kembali ke atas ↑</a>
       </div>
+    </footer>
 
-      {/* Download Resume / CV Link */}
-      <a
-        id="btn-download-cv"
-        href={`mailto:${portfolioData.contact.email}?subject=Recruiter%20Inquiry%20-%20Raihan%20Firdaus`}
-        title="Hubungi & Request CV Lengkap"
-        class="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-[#50fa7b] text-[#282a36] text-xs font-bold shadow hover:brightness-110 transition-all"
-      >
-        <span>📄</span>
-        <span class="hidden md:inline">Hire / CV</span>
-      </a>
-    </div>
-  </header>
-
-  <!-- Racing Speedometer HUD (Telemetry Cockpit) -->
-  <div
-    id="speedometer-hud"
-    class="fixed bottom-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none select-none hidden sm:flex items-center gap-3 bg-[#282a36]/90 border border-[#44475a] px-3.5 py-1.5 rounded-2xl shadow-2xl backdrop-blur-md"
-  >
-    {/* Gear Indicator */}
-    <div class="flex flex-col items-center">
-      <span class="text-[9px] font-mono text-[#6272a4] uppercase">GEAR</span>
-      <span id="telemetry-gear" class="text-sm font-black text-[#50fa7b] font-mono leading-none">1</span>
+    <!-- Non-intrusive Copy Toast -->
+    <div
+      id="copy-toast"
+      class="fixed bottom-6 right-6 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-150 bg-[#141413] text-[#faf9f6] dark:bg-[#ededeb] dark:text-[#111215] px-3.5 py-2 rounded text-xs font-mono"
+      role="status"
+    >
+      Email disalin ke clipboard
     </div>
 
-    <div class="h-6 w-[1px] bg-[#44475a]"></div>
-
-    {/* Speed Gauge */}
-    <div class="flex items-baseline gap-1">
-      <span id="telemetry-speed" class="text-xl font-black font-mono text-[#f8f8f2] tracking-tight leading-none">0</span>
-      <span class="text-[10px] font-mono font-bold text-[#8be9fd]">KM/H</span>
-    </div>
-
-    <div class="h-6 w-[1px] bg-[#44475a]"></div>
-
-    {/* Status Badges: Drift & Nitro */}
-    <div class="flex items-center gap-1">
-      <span
-        id="telemetry-drift"
-        class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/40 opacity-0 transition-opacity"
-      >
-        DRIFT
-      </span>
-      <span
-        id="telemetry-nitro"
-        class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-wider uppercase bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/40 opacity-0 transition-opacity"
-      >
-        NITRO
-      </span>
-    </div>
   </div>
 
-  <!-- Top Right HUD: Driving Hints -->
-  <aside class="fixed top-4 right-4 z-20 pointer-events-none select-none hidden md:block">
-    <div class="pointer-events-auto bg-[#343746]/90 border border-[#44475a] px-3.5 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs text-[11px] text-[#f8f8f2] flex items-center gap-2.5">
-      <div>
-        <span class="text-[#8be9fd] font-mono font-bold">WASD</span> Setir
-      </div>
-      <span class="text-[#44475a]">|</span>
-      <div>
-        <span class="text-[#50fa7b] font-mono font-bold">Shift</span> Nitro
-      </div>
-      <span class="text-[#44475a]">|</span>
-      <div>
-        <span class="text-[#ff79c6] font-mono font-bold">Space/J</span> Lompat
-      </div>
-      <span class="text-[#44475a]">|</span>
-      <div>
-        <span class="text-[#f1fa8c] font-mono font-bold">H</span> Klakson
-      </div>
-      <span class="text-[#44475a]">|</span>
-      <div>
-        <span class="text-[#ffb86c] font-mono font-bold">L</span> Malam
-      </div>
-    </div>
-  </aside>
+  <!-- Client-side Minimal Controller -->
+  <script is:inline>
+    (function () {
+      const themeToggle = document.getElementById('btn-theme-toggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const isDark = document.documentElement.classList.toggle('dark');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+      }
 
-  <!-- Feedback Toast Container -->
-  <div
-    id="toast-box"
-    class="fixed top-20 right-4 z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-10px] bg-[#343746] border border-[#50fa7b] text-[#f8f8f2] px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2 text-xs font-semibold backdrop-blur-md"
-  >
-    <span id="toast-icon">✨</span>
-    <span id="toast-text">Tersalin!</span>
-  </div>
-
-  <!-- Interactive Overlays -->
-  <Minimap />
-  <ProximityBadge />
-  <RecruiterDock />
-  <MobileControls />
-  <InfoModal />
-  <WelcomeModal />
-
-  <!-- Bundled Client Application Script -->
-  <script src="../scripts/app.ts"></script>
+      const copyBtn = document.getElementById('btn-copy-email');
+      const copyToast = document.getElementById('copy-toast');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+          const email = copyBtn.getAttribute('data-email');
+          if (!email) return;
+          try {
+            await navigator.clipboard.writeText(email);
+            if (copyToast) {
+              copyToast.classList.remove('opacity-0', 'translate-y-2');
+              copyToast.classList.add('opacity-100', 'translate-y-0');
+              setTimeout(() => {
+                copyToast.classList.remove('opacity-100', 'translate-y-0');
+                copyToast.classList.add('opacity-0', 'translate-y-2');
+              }, 2000);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        });
+      }
+    })();
+  </script>
 </Layout>

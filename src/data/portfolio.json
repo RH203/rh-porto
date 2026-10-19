@@ -1,0 +1,171 @@
+{
+  "profile": {
+    "name": "Raihan Firdaus",
+    "role": "Software Engineer | Full-Stack Web & Mobile Developer",
+    "location": "Surabaya, East Java, Indonesia",
+    "email": "rfirdaus.firdaus1@gmail.com",
+    "phone": "+62 823 3162 6316",
+    "linkedin": "https://linkedin.com/in/rraihanfirdaus",
+    "github": "https://github.com/RH203",
+    "status": "Available for Full-time & High-impact Contracts",
+    "summary": "Software Engineer lulusan S1 Teknik Informatika Telkom University (IPK 3.70/4.00) berbasis di Surabaya. Berpengalaman membangun dan mengoptimalkan aplikasi enterprise (ERP, WMS, HRIS), API throughput tinggi, dan aplikasi mobile cross-platform dengan clean architecture serta standar keamanan OWASP."
+  },
+  "stats": [
+    { "label": "IPK Kelulusan", "value": "3.70 / 4.00", "detail": "Telkom University (Informatika)" },
+    { "label": "Test Coverage Target", "value": ">70%", "detail": "PHPUnit Automated Testing" },
+    { "label": "Optimasi Kueri DB", "value": "5% Latency Drop", "detail": "SQL Indexing & EXPLAIN Tuning" },
+    { "label": "Paket Open Source", "value": "1 Plugin", "detail": "flutter_mic_selector (Pub.dev)" }
+  ],
+  "projects": [
+    {
+      "id": "jatim-bissa",
+      "title": "Jatim Bissa",
+      "subtitle": "Regional Public Service API Platform",
+      "role": "Lead Back-End Developer",
+      "period": "Feb 2025 - Okt 2025",
+      "description": "Platform integrasi layanan administrasi publik terpadu untuk instansi di Jawa Timur dengan arsitektur RESTful API berkinerja tinggi.",
+      "challenge": "Menyatukan alur data antar-instansi daerah dengan volume permintaan tinggi dan struktur database yang sebelumnya terisolasi.",
+      "solution": "Merancang arsitektur API modular dengan Laravel dan PostgreSQL, menerapkan database indexing terarah serta multi-layer caching Redis untuk memangkas bottleneck saat lonjakan trafik pengguna.",
+      "highlights": [
+        "Merancang arsitektur RESTful API scalable dengan Laravel dan PostgreSQL untuk integrasi layanan publik Jawa Timur.",
+        "Menerapkan indexing database dan multi-layer caching untuk mencegah bottleneck query saat trafik puncak.",
+        "Menulis dokumentasi interaktif Swagger/OpenAPI untuk standardisasi onboarding developer lintas instansi."
+      ],
+      "tags": ["Laravel", "PostgreSQL", "RESTful API", "Redis Caching", "Swagger", "OpenAPI"],
+      "githubUrl": "https://github.com/RH203",
+      "demoUrl": ""
+    },
+    {
+      "id": "roaming-marketplace",
+      "title": "Telkomsel Branch Roaming Package Marketplace",
+      "subtitle": "Telecom Data Package E-Commerce & ML Recommendation Engine",
+      "role": "Full-Stack Developer",
+      "period": "Sep 2025 - Des 2025",
+      "description": "Marketplace digital end-to-end untuk pembelian paket data roaming internasional dengan sistem tiering diskon berbasis machine learning.",
+      "challenge": "Menyajikan transaksi paket roaming yang cepat, aman, dan menghitung rekomendasi penawaran dinamis sesuai pola riwayat pengguna.",
+      "solution": "Mengembangkan antarmuka interaktif dengan Laravel & Livewire yang terintegrasi pipeline pembayaran otomatis, serta menerapkan algoritma machine learning (K-Means dan Random Forest) untuk penentuan diskon tiering.",
+      "highlights": [
+        "Membangun e-commerce dengan Laravel dan Livewire yang mencakup verifikasi transaksi instan dan alur pembayaran otomatis.",
+        "Mengintegrasikan model machine learning (K-Means & Random Forest) untuk rekomendasi paket dan tiering diskon personal.",
+        "Menerapkan Role-Based Access Control (RBAC) terenkripsi untuk dashboard administrasi multi-cabang."
+      ],
+      "tags": ["Laravel", "Livewire", "Machine Learning", "Random Forest", "K-Means", "MySQL", "RBAC"],
+      "githubUrl": "https://github.com/RH203",
+      "demoUrl": ""
+    },
+    {
+      "id": "flutter-mic-selector",
+      "title": "flutter_mic_selector",
+      "subtitle": "Cross-Platform Hardware Audio Routing Plugin",
+      "role": "Plugin Author & Maintainer",
+      "period": "2026",
+      "description": "Paket plugin Flutter open-source untuk merutekan dan memilih perangkat input mikrofon secara dinamis (built-in, wired headset, Bluetooth).",
+      "challenge": "API audio bawaan mobile sering mengunci mikrofon default tanpa kemampuan switching runtime antara Bluetooth SCO dan input kabel.",
+      "solution": "Membangun native platform channels langsung ke Android AudioRecord/AudioManager dan iOS CoreAudio/AVAudioSession dengan eksposur API Dart yang ringkas dan aman.",
+      "highlights": [
+        "Mengembangkan platform channels native untuk interaksi hardware audio level rendah di Android dan iOS.",
+        "Mempublikasikan library ke registry pub.dev dengan dokumentasi integrasi cross-platform lengkap."
+      ],
+      "tags": ["Flutter", "Dart", "Android AudioRecord", "iOS CoreAudio", "Open Source", "Hardware API"],
+      "githubUrl": "https://github.com/RH203",
+      "demoUrl": ""
+    }
+  ],
+  "experience": [
+    {
+      "id": "de-vivace",
+      "company": "De Vivace",
+      "location": "Surabaya, Indonesia",
+      "role": "Full-Stack Web & Mobile Developer",
+      "period": "Apr 2026 - Sekarang",
+      "summary": "Pengembangan aplikasi enterprise multi-modul mencakup ERP, HRIS, dan Warehouse Management System (WMS).",
+      "bullets": [
+        "Merancang dan mengirimkan sistem ERP, HRIS, dan WMS terpadu berbasis modul sesuai logika bisnis rantai pasok dan integritas data operasional.",
+        "Membangun RESTful API throughput tinggi yang menyinkronkan data web dan mobile dengan autentikasi token, auto-retry, dan exponential backoff.",
+        "Mengembangkan modul mobile responsif dengan Flutter serta mempublikasikan plugin audio kustom (flutter_mic_selector).",
+        "Menjalankan kolaborasi agile SDLC, code review rutin, dan penegakan arsitektur modular yang bersih."
+      ],
+      "techStack": ["Laravel", "Flutter", "RESTful APIs", "ERP/WMS", "PostgreSQL", "Clean Architecture"]
+    },
+    {
+      "id": "db-kiik",
+      "company": "DB KIIK",
+      "location": "Surabaya, Indonesia",
+      "role": "Full-Stack Web Developer",
+      "period": "Agu 2025 - Feb 2026",
+      "summary": "Pemeliharaan dan optimasi platform internal e-commerce transaksi tinggi (Portal Produk).",
+      "bullets": [
+        "Mengembangkan fitur transaksional dan antarmuka web produksi Portal Produk menggunakan Laravel dan JavaScript.",
+        "Melakukan profiling query execution plan (EXPLAIN) dan optimasi B-Tree indexing, memangkas latensi respon server rata-rata sebesar 5%.",
+        "Menerapkan sanitasi input ketat, mitigasi CSRF/XSS, dan validasi RBAC bertingkat mengikuti standar keamanan OWASP.",
+        "Menulis rangkaian automated test PHPUnit hingga mencapai >70% code coverage untuk mencegah regresi di lingkungan produksi."
+      ],
+      "techStack": ["Laravel", "PHPUnit", "PostgreSQL", "SQL Tuning", "OWASP Security", "jQuery"]
+    },
+    {
+      "id": "telkom-univ-lab",
+      "company": "Telkom University Surabaya",
+      "location": "Surabaya, Indonesia",
+      "role": "Asisten Praktikum (Laboratorium Komputasi)",
+      "period": "Feb 2025 - Mei 2025",
+      "summary": "Bimbingan teknis algoritma, struktur data, dan rekayasa perangkat lunak.",
+      "bullets": [
+        "Membimbing lebih dari 100 mahasiswa S1 dalam Pemrograman Berorientasi Objek (OOP), Struktur Data & Algoritma, dan AI menggunakan Java, Go, dan Python.",
+        "Mengaudit dan mereview efisiensi algoritma serta standardisasi clean code pada proyek akhir mahasiswa."
+      ],
+      "techStack": ["Java", "Go", "Python", "Data Structures", "Algorithms", "OOP"]
+    }
+  ],
+  "skills": [
+    {
+      "category": "Backend & System Design",
+      "description": "API throughput tinggi, caching, arsitektur modular",
+      "items": ["Laravel", "RESTful API", "Go (Golang)", "PHP", "Microservices", "Swagger/OpenAPI", "Clean Architecture"]
+    },
+    {
+      "category": "Frontend & Mobile",
+      "description": "Antarmuka responsif dan aplikasi cross-platform",
+      "items": ["Flutter (Android & iOS)", "Dart", "JavaScript (ES6+)", "Tailwind CSS", "Astro", "Livewire", "HTML5 & CSS3"]
+    },
+    {
+      "category": "Database & Query Tuning",
+      "description": "Pemodelan relasional dan optimasi latensi",
+      "items": ["PostgreSQL", "MySQL", "B-Tree Indexing", "EXPLAIN Query Profiling", "Redis Caching"]
+    },
+    {
+      "category": "Security & Testing",
+      "description": "Standar keamanan enterprise dan test coverage",
+      "items": ["OWASP Top 10", "RBAC Access Control", "PHPUnit (>70% Coverage)", "Input Sanitization", "CSRF/XSS Defense"]
+    },
+    {
+      "category": "Tooling & DevOps",
+      "description": "Workflow kolaborasi dan deployment",
+      "items": ["Git & GitHub", "Linux CLI", "Postman", "CI/CD Principles", "Agile / Scrum"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "S1 Teknik Informatika (S.Kom.)",
+      "institution": "Telkom University Surabaya",
+      "period": "2021 - 2025",
+      "gpa": "3.70 / 4.00",
+      "notes": "Lulus dengan predikat sangat memuaskan (standar cum laude 3.30+)"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Sertifikasi Profesional: SQL Database Administration, Web Development, & Flutter Application Development",
+      "issuer": "Dicoding Academy",
+      "year": "2025"
+    },
+    {
+      "name": "Flutter & Dart Complete Cross-Platform Development Bootcamp",
+      "issuer": "Udemy",
+      "year": "2025"
+    }
+  ],
+  "languages": [
+    { "language": "Bahasa Indonesia", "proficiency": "Penutur Asli (Native)" },
+    { "language": "Bahasa Inggris", "proficiency": "Kecakapan Kerja (CEFR B1, EPRT: 483)" }
+  ]
+}

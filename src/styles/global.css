@@ -1,44 +1,61 @@
 @import "tailwindcss";
 
-@theme {
-  --color-dracula-bg: #282a36;
-  --color-dracula-surface: #343746;
-  --color-dracula-elevated: #44475a;
-  --color-dracula-purple: #bd93f9;
-  --color-dracula-green: #50fa7b;
-  --color-dracula-pink: #ff79c6;
-  --color-dracula-cyan: #8be9fd;
-  --color-dracula-yellow: #f1fa8c;
-  --color-dracula-orange: #ffb86c;
-  --color-dracula-text: #f8f8f2;
-  --color-dracula-muted: #6272a4;
+@layer base {
+  :root {
+    --bg-page: #faf9f6;
+    --text-primary: #141413;
+    --text-muted: #6b6a67;
+    --text-subtle: #999893;
+    --border-color: #e5e4de;
+    --surface: #ffffff;
+    --surface-hover: #f3f2ee;
+  }
+
+  .dark {
+    --bg-page: #111215;
+    --text-primary: #ededeb;
+    --text-muted: #9c9b98;
+    --text-subtle: #6e6d6a;
+    --border-color: #24252a;
+    --surface: #18191e;
+    --surface-hover: #202228;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accessible focus indicators */
+  :focus-visible {
+    outline: 2px solid #141413;
+    outline-offset: 2px;
+  }
+
+  .dark :focus-visible {
+    outline: 2px solid #ededeb;
+  }
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #282a36;
-  color: #f8f8f2;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Custom scrollbars for modals */
+/* Minimal subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #282a36;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #44475a;
-  border-radius: 9999px;
+  background: #d4d3cc;
+  border-radius: 2px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #6272a4;
+.dark ::-webkit-scrollbar-thumb {
+  background: #2e3037;
 }

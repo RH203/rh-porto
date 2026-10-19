@@ -8,7 +8,7 @@ interface Props {
 
 const {
   title,
-  description = 'Interactive 3D Toy Car Diorama Portfolio by Raihan Firdaus - Software Engineer and Full-Stack Developer.',
+  description = 'Portofolio Software Engineer Raihan Firdaus - Full-Stack Web & Mobile Developer berbasis di Surabaya.',
 } = Astro.props;
 ---
 
@@ -16,10 +16,7 @@ const {
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
@@ -27,9 +24,19 @@ const {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#282a36" />
+    <meta name="theme-color" content="#0b0f19" />
+
+    <!-- Anti-FOUC Theme Script -->
+    <script is:inline>
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
-  <body class="relative w-screen h-screen overflow-hidden bg-[#282a36] text-[#f8f8f2] select-none">
+  <body class="bg-[#f8fafc] text-[#0f172a] dark:bg-[#0b0f19] dark:text-[#f8fafc] transition-colors duration-200 antialiased selection:bg-blue-500/20 selection:text-blue-600 dark:selection:text-blue-300">
     <slot />
   </body>
 </html>
